@@ -18,6 +18,7 @@ package org.jetbrains.kotlin.idea.highlighter
 
 import org.jetbrains.kotlin.descriptors.CallableMemberDescriptor
 import org.jetbrains.kotlin.diagnostics.rendering.Renderers
+import org.jetbrains.kotlin.diagnostics.rendering.SmartTypeRenderer
 import org.jetbrains.kotlin.idea.highlighter.renderersUtil.renderResolvedCall
 import org.jetbrains.kotlin.renderer.DescriptorRenderer
 import org.jetbrains.kotlin.renderer.Renderer
@@ -38,9 +39,7 @@ object IdeRenderers {
                 .joinToString("") { "<li>${DescriptorRenderer.HTML.render(it)}</li>" }
     }
 
-    @JvmField val HTML_RENDER_TYPE: Renderer<KotlinType> = Renderer {
-        DescriptorRenderer.HTML.renderType(it)
-    }
+    @JvmField val HTML_RENDER_TYPE: Renderer<KotlinType> = SmartTypeRenderer(DescriptorRenderer.HTML)
 
     @JvmField val HTML_NONE_APPLICABLE_CALLS: Renderer<Collection<ResolvedCall<*>>> = Renderer {
         calls: Collection<ResolvedCall<*>> ->

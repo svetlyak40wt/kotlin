@@ -39,6 +39,7 @@ import org.jetbrains.kotlin.diagnostics.Severity;
 import org.jetbrains.kotlin.diagnostics.rendering.AbstractDiagnosticWithParametersRenderer;
 import org.jetbrains.kotlin.diagnostics.rendering.DefaultErrorMessages;
 import org.jetbrains.kotlin.diagnostics.rendering.DiagnosticRenderer;
+import org.jetbrains.kotlin.diagnostics.rendering.RenderingContext;
 import org.jetbrains.kotlin.psi.KtElement;
 import org.jetbrains.kotlin.psi.KtExpression;
 import org.jetbrains.kotlin.psi.KtReferenceExpression;
@@ -657,7 +658,7 @@ public class CheckerTestUtil {
             String diagnosticName = diagnostic.getFactory().getName();
             if (renderer instanceof AbstractDiagnosticWithParametersRenderer) {
                 //noinspection unchecked
-                Object[] renderParameters = ((AbstractDiagnosticWithParametersRenderer) renderer).renderParameters(diagnostic);
+                Object[] renderParameters = ((AbstractDiagnosticWithParametersRenderer) renderer).renderParameters(diagnostic, RenderingContext.Empty.INSTANCE);
                 List<String> parameters = ContainerUtil.map(renderParameters, new Function<Object, String>() {
                     @Override
                     public String fun(Object o) {

@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package org.jetbrains.kotlin.diagnostics.rendering;
+package org.jetbrains.kotlin.diagnostics.rendering
 
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.kotlin.renderer.Renderer
 
-public interface MultiRenderer<O> {
-    @NotNull
-    String[] render(@NotNull O object);
+interface SmartRenderer<T> : Renderer<T> {
+    fun render(obj: T, context: RenderingContext): String
+
+    override fun render(obj: T): String = render(obj, RenderingContext.Empty)
 }

@@ -110,7 +110,7 @@ object Renderers {
 
     @JvmField val RENDER_CLASS_OR_OBJECT_NAME: Renderer<ClassDescriptor> = Renderer { it.renderKindWithName() }
 
-    @JvmField val RENDER_TYPE: Renderer<KotlinType> = Renderer { DescriptorRenderer.FQ_NAMES_IN_TYPES.renderType(it) }
+    @JvmField val RENDER_TYPE: Renderer<KotlinType> = SmartTypeRenderer(DescriptorRenderer.FQ_NAMES_IN_TYPES)
 
     @JvmField val RENDER_POSITION_VARIANCE: Renderer<Variance> = Renderer {
         variance: Variance ->

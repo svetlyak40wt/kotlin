@@ -61,7 +61,7 @@ public final class DiagnosticFactoryToRendererMap {
 
     public <E extends PsiElement, A> void put(@NotNull DiagnosticFactory1<E, A> factory, @NotNull String message, @NotNull MultiRenderer<? super A> rendererA) {
         checkMutability();
-        map.put(factory, new DiagnosticWithMultiParametersRenderer<A>(message, rendererA));
+        map.put(factory, new DiagnosticWithParametersMultiRenderer<A>(message, rendererA));
     }
 
     public <E extends PsiElement, A, B> void put(@NotNull DiagnosticFactory2<E, A, B> factory,
