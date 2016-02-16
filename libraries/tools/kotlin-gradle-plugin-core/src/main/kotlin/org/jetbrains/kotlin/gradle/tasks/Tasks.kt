@@ -55,6 +55,8 @@ val ANNOTATIONS_PLUGIN_NAME = "org.jetbrains.kotlin.kapt"
 abstract class AbstractKotlinCompile<T : CommonCompilerArguments>() : AbstractCompile() {
     abstract protected val compiler: CLICompiler<T>
     abstract protected fun createBlankArgs(): T
+    open protected fun beforeCompileHook(args: T) {
+    }
     open protected fun afterCompileHook(args: T) {
     }
     abstract protected fun populateTargetSpecificArgs(args: T)
@@ -100,6 +102,7 @@ abstract class AbstractKotlinCompile<T : CommonCompilerArguments>() : AbstractCo
         compilerCalled = true
         val cachesDir = File(project.buildDir, "kotlin-caches")
         compilerCalled = true
+        beforeCompileHook(args)
         callCompiler(args, sources, inputs.isIncremental, modified, removed, cachesDir)
         afterCompileHook(args)
     }
@@ -140,6 +143,7 @@ abstract class AbstractKotlinCompile<T : CommonCompilerArguments>() : AbstractCo
 open class KotlinCompile() : AbstractKotlinCompile<K2JVMCompilerArguments>() {
     override val compiler = K2JVMCompiler()
     override fun createBlankArgs(): K2JVMCompilerArguments = K2JVMCompilerArguments()
+    private val kotlinClassFiles = HashSet<File>()
 
     // Should be SourceDirectorySet or File
     val srcDirsSources = HashSet<Any>()
@@ -502,6 +506,10 @@ open class KotlinCompile() : AbstractKotlinCompile<K2JVMCompilerArguments>() {
 
     private fun File.isJavaFile() = extension.equals(JavaFileType.INSTANCE.defaultExtension, ignoreCase = true)
 
+    override fun beforeCompileHook(args: K2JVMCompilerArguments) {
+        kotlinClassFiles.addAll(listClassFiles(compilerDestinationDir))
+    }
+
     override fun afterCompileHook(args: K2JVMCompilerArguments) {
         logger.debug("Copying resulting files to classes")
 
@@ -509,6 +517,20 @@ open class KotlinCompile() : AbstractKotlinCompile<K2JVMCompilerArguments>() {
         val outputDirFile = File(compilerDestinationDir)
         if (outputDirFile.exists()) {
             FileUtils.copyDirectory(outputDirFile, destinationDir)
+        }
+
+        kotlinClassFiles.removeAll(listClassFiles(outputDirPath))
+        if (kotlinClassFiles.isNotEmpty()) {
+            // some classes were removed during compilation
+            val filesToRemove = kotlinClassFiles.map {
+                val relativePath = it.relativeTo(outputDirFile).path
+                File(destinationDir, relativePath)
+            }
+
+            val notRemoved = filesToRemove.filter { !it.delete() }
+            if (notRemoved.isNotEmpty()) {
+                logger.kotlinDebug("Could not delete classfiles: $notRemoved")
+            }
         }
     }
 
@@ -681,3 +703,6 @@ internal fun Logger.kotlinInfo(message: String) {
 internal fun Logger.kotlinDebug(message: String) {
     this.debug("[KOTLIN] $message")
 }
+
+internal fun listClassFiles(path: String): Sequence<File> =
+        File(path).walk().filter { it.isFile && it.extension.toLowerCase() == "class" }
