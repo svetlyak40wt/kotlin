@@ -16,18 +16,19 @@
 
 package org.jetbrains.kotlin.js.translate.callTranslator
 
-import org.jetbrains.kotlin.descriptors.CallableDescriptor
-import org.jetbrains.kotlin.js.translate.utils.AnnotationsUtils
-import org.jetbrains.kotlin.resolve.scopes.receivers.ExpressionReceiver
-import org.jetbrains.kotlin.psi.KtSuperExpression
 import com.google.dart.compiler.backend.js.ast.JsExpression
-import org.jetbrains.kotlin.descriptors.VariableDescriptor
 import com.google.dart.compiler.backend.js.ast.JsName
-import org.jetbrains.kotlin.js.translate.context.Namer
-import org.jetbrains.kotlin.js.translate.utils.JsAstUtils
-import org.jetbrains.kotlin.js.translate.context.TranslationContext
+import org.jetbrains.kotlin.descriptors.CallableDescriptor
 import org.jetbrains.kotlin.descriptors.PropertyDescriptor
+import org.jetbrains.kotlin.descriptors.VariableDescriptor
+import org.jetbrains.kotlin.js.translate.context.Namer
+import org.jetbrains.kotlin.js.translate.context.TranslationContext
+import org.jetbrains.kotlin.js.translate.reference.ReferenceTranslator
+import org.jetbrains.kotlin.js.translate.utils.AnnotationsUtils
+import org.jetbrains.kotlin.js.translate.utils.JsAstUtils
+import org.jetbrains.kotlin.psi.KtSuperExpression
 import org.jetbrains.kotlin.resolve.descriptorUtil.isExtension
+import org.jetbrains.kotlin.resolve.scopes.receivers.ExpressionReceiver
 
 
 val CallInfo.callableDescriptor: CallableDescriptor
@@ -43,6 +44,12 @@ fun CallInfo.isSuperInvocation(): Boolean {
     val dispatchReceiver = resolvedCall.dispatchReceiver
     return dispatchReceiver is ExpressionReceiver && dispatchReceiver.expression is KtSuperExpression
 }
+
+val CallInfo.calleeOwner: JsExpression
+    get() {
+        val calleeOwner = resolvedCall.resultingDescriptor.containingDeclaration
+        return ReferenceTranslator.translateAsFQReference(calleeOwner, context)
+    }
 
 val VariableAccessInfo.variableDescriptor: VariableDescriptor
     get() = callableDescriptor as VariableDescriptor
