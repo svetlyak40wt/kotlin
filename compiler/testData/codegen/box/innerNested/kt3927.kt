@@ -1,9 +1,12 @@
 //KT-3927 Inner class cannot be instantiated with child instance of outer class
 
+var i = 0
+
 abstract class Base {
+    val base = "b" + i++
     inner class Inner {
-        fun o() = "O"
-        fun k() = "K"
+        fun o() = "O" + base
+        fun k() = "K" + base
     }
 }
 
@@ -18,6 +21,6 @@ fun box(): String {
     }
     Child().f()
 
-    return result
+    return if (result == "Ob0Kb1") "OK" else result
 }
 
