@@ -641,7 +641,7 @@ public class DefaultErrorMessages {
                 STRING, STRING, STRING);
 
         MAP.put(OVERLOAD_RESOLUTION_AMBIGUITY, "Overload resolution ambiguity: {0}", AMBIGUOUS_CALLS);
-        MAP.put(NONE_APPLICABLE, "None of the following functions can be called with the arguments supplied: {0}", AMBIGUOUS_CALLS);
+        MAP.put(NONE_APPLICABLE, "None of the following functions is applicable: {0}", AMBIGUOUS_CALLS);
         MAP.put(CANNOT_COMPLETE_RESOLVE, "Cannot choose among the following candidates without completing type inference: {0}", AMBIGUOUS_CALLS);
         MAP.put(UNRESOLVED_REFERENCE_WRONG_RECEIVER, "Unresolved reference. None of the following candidates is applicable because of receiver type mismatch: {0}", AMBIGUOUS_CALLS);
         MAP.put(INVOKE_EXTENSION_ON_NOT_EXTENSION_FUNCTION, "Impossible call as extension because {0} is not an extension function.", ELEMENT_TEXT);
