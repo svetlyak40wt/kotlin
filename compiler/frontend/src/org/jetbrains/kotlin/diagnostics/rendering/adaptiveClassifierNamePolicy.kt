@@ -66,8 +66,17 @@ private class AdaptiveClassifierNamePolicy(private val ambiguousNames: List<Name
 
 private val ADAPTIVE_CLASSIFIER_POLICY_KEY = object : RenderingContext.Key<ClassifierNamePolicy>("ADAPTIVE_CLASSIFIER_POLICY") {
     override fun compute(objectsToRender: Collection<Any?>): ClassifierNamePolicy {
-        val ambiguousNames = collectClassifiers(objectsToRender).groupBy { it.name }.filter { it.value.size > 1 }.map { it.key }
-        return AdaptiveClassifierNamePolicy(ambiguousNames)
+        val collectClassifiers = collectClassifiers(objectsToRender)
+        val ambiguousNames = collectClassifiers.groupBy { it.name }.filter { it.value.size > 1 }.map { it.key }
+        val adaptiveClassifierNamePolicy = AdaptiveClassifierNamePolicy(ambiguousNames)
+        return object : ClassifierNamePolicy {
+            override fun renderClassifier(classifier: ClassifierDescriptor, renderer: DescriptorRenderer): String {
+                assert(classifier in collectClassifiers || objectsToRender.isEmpty()) {
+                    "${classifier.fqNameUnsafe}"
+                }
+                return adaptiveClassifierNamePolicy.renderClassifier(classifier, renderer)
+            }
+        }
     }
 }
 
