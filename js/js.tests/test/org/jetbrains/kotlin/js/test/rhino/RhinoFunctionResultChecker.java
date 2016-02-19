@@ -64,7 +64,7 @@ public class RhinoFunctionResultChecker implements RhinoResultChecker {
             } else {
                 sb.append(".").append(moduleId);
             }
-            if (packageName != Namer.getRootPackageName()) {
+            if (!Namer.getRootPackageName().equals(packageName) ) {
                 sb.append('.').append(packageName);
             }
             sb.append('.');

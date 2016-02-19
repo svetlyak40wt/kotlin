@@ -16,12 +16,17 @@
 
 package org.jetbrains.kotlin.js.test.semantics
 
-import org.jetbrains.kotlin.js.test.AbstractSingleFileTranslationWithDirectivesTest
-import org.jetbrains.kotlin.js.test.MultipleModulesTranslationTest
-import org.jetbrains.kotlin.js.test.SingleFileTranslationTest
+import org.jetbrains.kotlin.js.test.*
 
 abstract class AbstractBlackBoxTest(d: String) : SingleFileTranslationTest(d) {
     override fun doTest(filename: String) = checkBlackBoxIsOkByPath(filename)
+}
+
+abstract class AbstractGeneratedInlineTest(path: String) : SingleFileTranslationTest(path) {
+    override fun doTest(filename: String) {
+        val inputFiles = listOf(filename, filename.substringBeforeLast("1.kt") + "2.kt")
+        runFunctionOutputTestByPaths(BasicTest.DEFAULT_ECMA_VERSIONS, inputFiles, "_", BasicTest.TEST_FUNCTION, "OK")
+    }
 }
 
 abstract class AbstractBridgeTest : AbstractBlackBoxTest("bridges/")
@@ -59,3 +64,5 @@ abstract class AbstractInnerNestedTest : AbstractBlackBoxTest("innerNested/")
 abstract class AbstractClassesTest : AbstractBlackBoxTest("classes/")
 
 abstract class AbstractSuperTest : AbstractBlackBoxTest("super/")
+
+abstract class AbstractNonLocalReturnsTest : AbstractGeneratedInlineTest("inline.generated/nonLocalReturns/")
