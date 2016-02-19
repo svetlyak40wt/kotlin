@@ -17,6 +17,7 @@
 package org.jetbrains.kotlin.js.translate.reference
 
 import com.google.dart.compiler.backend.js.ast.*
+import com.google.dart.compiler.backend.js.ast.metadata.isLambda
 import com.intellij.util.SmartList
 import org.jetbrains.kotlin.descriptors.TypeParameterDescriptor
 import org.jetbrains.kotlin.js.translate.context.TemporaryConstVariable
@@ -27,6 +28,7 @@ import org.jetbrains.kotlin.js.translate.general.Translation
 import org.jetbrains.kotlin.js.translate.utils.AnnotationsUtils
 import org.jetbrains.kotlin.js.translate.utils.JsAstUtils
 import org.jetbrains.kotlin.js.translate.utils.TranslationUtils
+import org.jetbrains.kotlin.psi.LambdaArgument
 import org.jetbrains.kotlin.psi.ValueArgument
 import org.jetbrains.kotlin.resolve.calls.model.*
 import org.jetbrains.kotlin.types.KotlinType
@@ -194,6 +196,9 @@ class CallArgumentTranslator private constructor(
             argumentExpression!!
 
             val jsExpression = Translation.translateAsExpression(argumentExpression, context)
+            if (jsExpression is SourceInfoAwareJsNode) {
+                jsExpression.isLambda = valueArguments[0] is LambdaArgument
+            }
             result.add(jsExpression)
 
             if (JsAstUtils.isEmptyExpression(jsExpression)) {

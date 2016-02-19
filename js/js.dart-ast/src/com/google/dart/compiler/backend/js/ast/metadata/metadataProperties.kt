@@ -20,6 +20,7 @@ package com.google.dart.compiler.backend.js.ast.metadata
 import com.google.dart.compiler.backend.js.ast.*
 import com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.descriptors.CallableDescriptor
+import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.resolve.inline.InlineStrategy
 
 var JsName.staticRef: JsNode? by MetadataProperty(default = null)
@@ -36,6 +37,29 @@ var JsFunction.isLocal: Boolean by MetadataProperty(default = false)
 var JsParameter.hasDefaultValue: Boolean by MetadataProperty(default = false)
 
 var JsInvocation.typeCheck: TypeCheck? by MetadataProperty(default = null)
+
+/**
+ * For function and lambda bodies indicates what declaration corresponds to.
+ * When absent (`null`) on body of a named function, this function is from external JS module.
+ * Fallback to [descriptor] of the call site in the latter case.
+ */
+var SourceInfoAwareJsNode.declarationDescriptor: DeclarationDescriptor? by MetadataProperty(default = null)
+
+/**
+ * For return statement specifies corresponding target descriptor given by [declarationDescriptor].
+ * For all JsReturn nodes created by K2JSTranslator, this property is filled, either for local/non-local labeled and non-labeled returns.
+ *
+ * Absence of this property (expressed as `null`) means that the corresponding JsReturn got from external JS library.
+ * In this case we assume that such return can never be non-local.
+ */
+var JsReturn.returnTarget: DeclarationDescriptor? by MetadataProperty(default = null)
+
+/**
+ * For each actual parameter of inline function call site specifies if this parameter is lambda literal, i.e. can be inlined
+ * together with the function. Translator will never cache this lambda in a temporary variable, so that JSInliner has a chance
+ * to perform inlining.
+ */
+var SourceInfoAwareJsNode.isLambda: Boolean by MetadataProperty(default = false)
 
 enum class TypeCheck {
     TYPEOF,

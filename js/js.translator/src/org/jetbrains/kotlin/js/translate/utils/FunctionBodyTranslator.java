@@ -17,6 +17,7 @@
 package org.jetbrains.kotlin.js.translate.utils;
 
 import com.google.dart.compiler.backend.js.ast.*;
+import com.google.dart.compiler.backend.js.ast.metadata.MetadataProperties;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns;
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor;
@@ -88,6 +89,7 @@ public final class FunctionBodyTranslator extends AbstractTranslator {
         assert jetBodyExpression != null : "Cannot translate a body of an abstract function.";
         JsBlock jsBlock = new JsBlock(setDefaultValueForArguments(descriptor, context()));
         jsBlock.getStatements().addAll(mayBeWrapWithReturn(Translation.translateExpression(jetBodyExpression, context(), jsBlock)).getStatements());
+        MetadataProperties.setDeclarationDescriptor(jsBlock, descriptor);
         return jsBlock;
     }
 
@@ -106,7 +108,7 @@ public final class FunctionBodyTranslator extends AbstractTranslator {
     }
 
     @NotNull
-    private static JsNode lastExpressionReturned(@NotNull JsNode body) {
+    private JsNode lastExpressionReturned(@NotNull JsNode body) {
         return mutateLastExpression(body, new Mutator() {
             @Override
             @NotNull
@@ -114,7 +116,9 @@ public final class FunctionBodyTranslator extends AbstractTranslator {
                 if (!(node instanceof JsExpression)) {
                     return node;
                 }
-                return new JsReturn((JsExpression)node);
+                JsReturn jsReturn = new JsReturn((JsExpression)node);
+                MetadataProperties.setReturnTarget(jsReturn, descriptor);
+                return jsReturn;
             }
         });
     }

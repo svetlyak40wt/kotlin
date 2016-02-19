@@ -23,6 +23,7 @@ import kotlin.jvm.functions.Function1;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.kotlin.descriptors.CallableDescriptor;
+import org.jetbrains.kotlin.descriptors.DeclarationDescriptor;
 import org.jetbrains.kotlin.diagnostics.DiagnosticSink;
 import org.jetbrains.kotlin.diagnostics.Errors;
 import org.jetbrains.kotlin.js.inline.clean.RemoveUnusedFunctionDefinitionsKt;
@@ -67,6 +68,8 @@ public class JsInliner extends JsVisitorWithContextImpl {
             return false;
         }
     };
+    private final Map<DeclarationDescriptor, InliningContext.BlockInfo> blocks =
+            new HashMap<DeclarationDescriptor, InliningContext.BlockInfo>();
 
     public static JsProgram process(@NotNull TranslationContext context) {
         JsProgram program = context.program();
@@ -103,7 +106,7 @@ public class JsInliner extends JsVisitorWithContextImpl {
     @Override
     public void endVisit(@NotNull JsFunction function, @NotNull JsContext context) {
         super.endVisit(function, context);
-        NamingUtilsKt.refreshLabelNames(getInliningContext().newNamingContext(), function);
+        NamingUtilsKt.refreshLabelNames(function.getBody(), function.getScope());
 
         RemoveUnusedLocalFunctionDeclarationsKt.removeUnusedLocalFunctionDeclarations(function);
         processedFunctions.add(function);
@@ -188,7 +191,6 @@ public class JsInliner extends JsVisitorWithContextImpl {
         // body of inline function can contain call to lambdas that need to be inlined
         JsStatement inlineableBodyWithLambdasInlined = accept(inlineableBody);
         assert inlineableBody == inlineableBodyWithLambdasInlined;
-
         statementContext.addPrevious(flattenStatement(inlineableBody));
 
         /**
@@ -196,7 +198,12 @@ public class JsInliner extends JsVisitorWithContextImpl {
          * @see FunctionInlineMutator.isResultNeeded()
          */
         if (resultExpression == null) {
-            statementContext.removeMe();
+            if (statementContext.getCurrentNode() instanceof JsReturn) {
+                statementContext.replaceMe(new JsReturn());
+            }
+            else {
+                statementContext.removeMe();
+            }
             return;
         }
 
@@ -285,6 +292,12 @@ public class JsInliner extends JsVisitorWithContextImpl {
         @Override
         public FunctionContext getFunctionContext() {
             return functionContext;
+        }
+
+        @NotNull
+        @Override
+        public Map<DeclarationDescriptor, InliningContext.BlockInfo> getBlocks() {
+            return blocks;
         }
     }
 
