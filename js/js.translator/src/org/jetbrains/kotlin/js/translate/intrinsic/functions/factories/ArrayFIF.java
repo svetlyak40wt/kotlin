@@ -18,6 +18,7 @@ package org.jetbrains.kotlin.js.translate.intrinsic.functions.factories;
 
 import com.google.common.collect.Lists;
 import com.google.dart.compiler.backend.js.ast.JsArrayAccess;
+import com.google.dart.compiler.backend.js.ast.JsEmptyExpression;
 import com.google.dart.compiler.backend.js.ast.JsExpression;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -114,6 +115,9 @@ public final class ArrayFIF extends CompositeFIF {
             assert arguments.size() == 2 : "Array set expression must have two arguments.";
             JsExpression indexExpression = arguments.get(0);
             JsExpression value = arguments.get(1);
+            if (value instanceof JsEmptyExpression) {
+                return context.getEmptyExpression();
+            }
             JsArrayAccess arrayAccess = new JsArrayAccess(receiver, indexExpression);
             return assignment(arrayAccess, value);
         }

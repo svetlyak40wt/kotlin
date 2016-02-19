@@ -23,6 +23,7 @@ import kotlin.jvm.functions.Function1;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.kotlin.descriptors.CallableDescriptor;
+import org.jetbrains.kotlin.descriptors.DeclarationDescriptor;
 import org.jetbrains.kotlin.diagnostics.DiagnosticSink;
 import org.jetbrains.kotlin.diagnostics.Errors;
 import org.jetbrains.kotlin.js.inline.clean.RemoveUnusedFunctionDefinitionsKt;
@@ -67,6 +68,11 @@ public class JsInliner extends JsVisitorWithContextImpl {
             return false;
         }
     };
+    private final Map<DeclarationDescriptor, InliningContext.BlockInfo> blocks =
+            new HashMap<DeclarationDescriptor, InliningContext.BlockInfo>();
+    private final Deque<Holder<JsVars>> varsStack = new ArrayDeque<Holder<JsVars>>();
+    private final Deque<Holder<JsVars.JsVar>> varStack = new ArrayDeque<Holder<JsVars.JsVar>>();
+    private final Deque<Integer> cutIndexStack = new ArrayDeque<Integer>();
 
     public static JsProgram process(@NotNull TranslationContext context) {
         JsProgram program = context.program();
@@ -88,6 +94,35 @@ public class JsInliner extends JsVisitorWithContextImpl {
     }
 
     @Override
+    public boolean visit(@NotNull JsVars x, @NotNull JsContext ctx) {
+        varsStack.push(new Holder<JsVars>(x));
+        cutIndexStack.push(0);
+        return super.visit(x, ctx);
+    }
+
+    @Override
+    public void endVisit(@NotNull JsVars x, @NotNull JsContext ctx) {
+        super.endVisit(x, ctx);
+        varsStack.pop();
+        int cutIndex = cutIndexStack.pop();
+        if (cutIndex > 0) {
+            x.getVars().subList(0, cutIndex).clear();
+        }
+    }
+
+    @Override
+    public boolean visit(@NotNull JsVars.JsVar x, @NotNull JsContext ctx) {
+        varStack.push(new Holder<JsVars.JsVar>(x));
+        return super.visit(x, ctx);
+    }
+
+    @Override
+    public void endVisit(@NotNull JsVars.JsVar x, @NotNull JsContext ctx) {
+        varStack.pop();
+        super.endVisit(x, ctx);
+    }
+
+    @Override
     public boolean visit(@NotNull JsFunction function, @NotNull JsContext context) {
         inliningContexts.push(new JsInliningContext(function));
         assert !inProcessFunctions.contains(function): "Inliner has revisited function";
@@ -103,7 +138,7 @@ public class JsInliner extends JsVisitorWithContextImpl {
     @Override
     public void endVisit(@NotNull JsFunction function, @NotNull JsContext context) {
         super.endVisit(function, context);
-        NamingUtilsKt.refreshLabelNames(getInliningContext().newNamingContext(), function);
+        NamingUtilsKt.refreshLabelNames(function.getBody(), function.getScope());
 
         RemoveUnusedLocalFunctionDeclarationsKt.removeUnusedLocalFunctionDeclarations(function);
         processedFunctions.add(function);
@@ -189,6 +224,22 @@ public class JsInliner extends JsVisitorWithContextImpl {
         JsStatement inlineableBodyWithLambdasInlined = accept(inlineableBody);
         assert inlineableBody == inlineableBodyWithLambdasInlined;
 
+        // When we deal with `var v1 = e1, v2 = e2` and e2 emits inlineable body, split it into `var v1 = e1` and `var v2 = e2`
+        // to place inlineable body in between.
+        JsVars outerVars = varsStack.peek().value;
+        if (outerVars != null) {
+            JsVars.JsVar outerVar = varStack.peek().value;
+            int index = outerVars.getVars().indexOf(outerVar);
+            int lastCutIndex = cutIndexStack.pop();
+            if (index > lastCutIndex) {
+                JsVars leftVars = new JsVars(new ArrayList<JsVars.JsVar>(outerVars.getVars().subList(lastCutIndex, index)),
+                                             outerVars.isMultiline());
+                cutIndexStack.push(index);
+                statementContext.addPrevious(leftVars);
+            } else {
+                cutIndexStack.push(lastCutIndex);
+            }
+        }
         statementContext.addPrevious(flattenStatement(inlineableBody));
 
         /**
@@ -255,6 +306,18 @@ public class JsInliner extends JsVisitorWithContextImpl {
         return getFunctionContext().hasFunctionDefinition(call);
     }
 
+    @Override
+    public boolean visit(@NotNull JsBlock block, @NotNull JsContext ctx) {
+        varsStack.push(new Holder<JsVars>(null));
+        return super.visit(block, ctx);
+    }
+
+    @Override
+    public void endVisit(@NotNull JsBlock x, @NotNull JsContext ctx) {
+        varsStack.pop();
+        super.endVisit(x, ctx);
+    }
+
     private class JsInliningContext implements InliningContext {
         private final FunctionContext functionContext;
 
@@ -286,6 +349,12 @@ public class JsInliner extends JsVisitorWithContextImpl {
         public FunctionContext getFunctionContext() {
             return functionContext;
         }
+
+        @NotNull
+        @Override
+        public Map<DeclarationDescriptor, InliningContext.BlockInfo> getBlocks() {
+            return blocks;
+        }
     }
 
     private static class JsCallInfo {
@@ -298,6 +367,14 @@ public class JsInliner extends JsVisitorWithContextImpl {
         private JsCallInfo(@NotNull JsInvocation call, @NotNull JsFunction function) {
             this.call = call;
             containingFunction = function;
+        }
+    }
+
+    static class Holder<T> {
+        final T value;
+
+        public Holder(T value) {
+            this.value = value;
         }
     }
 }

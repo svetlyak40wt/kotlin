@@ -295,6 +295,10 @@ object DynamicOperatorCallCase : FunctionCallCase() {
 }
 
 fun FunctionCallInfo.translateFunctionCall(): JsExpression {
+    if (argumentsInfo.valueArguments.any { JsAstUtils.isEmptyExpression(it) }) {
+        return context.emptyExpression
+    }
+
     val intrinsic = DelegateFunctionIntrinsic.intrinsic(this)
 
     return when {
