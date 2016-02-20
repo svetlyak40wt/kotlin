@@ -23,15 +23,14 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.kotlin.descriptors.ClassDescriptor;
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor;
 import org.jetbrains.kotlin.descriptors.PropertyDescriptor;
-import org.jetbrains.kotlin.js.translate.utils.JsDescriptorUtils;
-import org.jetbrains.kotlin.lexer.KtToken;
-import org.jetbrains.kotlin.psi.*;
-import org.jetbrains.kotlin.types.expressions.OperatorConventions;
 import org.jetbrains.kotlin.js.translate.context.TranslationContext;
 import org.jetbrains.kotlin.js.translate.general.AbstractTranslator;
 import org.jetbrains.kotlin.js.translate.reference.AccessTranslationUtils;
 import org.jetbrains.kotlin.js.translate.reference.AccessTranslator;
 import org.jetbrains.kotlin.js.translate.reference.BackingFieldAccessTranslator;
+import org.jetbrains.kotlin.lexer.KtToken;
+import org.jetbrains.kotlin.psi.*;
+import org.jetbrains.kotlin.types.expressions.OperatorConventions;
 
 import static org.jetbrains.kotlin.js.translate.utils.BindingUtils.getDescriptorForReferenceExpression;
 import static org.jetbrains.kotlin.js.translate.utils.BindingUtils.isVariableReassignment;
@@ -123,6 +122,6 @@ public abstract class AssignmentTranslator extends AbstractTranslator {
             return false;
         }
 
-        return !propertyDescriptor.isVar() && propertyDescriptor.getGetter() != null;
+        return !propertyDescriptor.isVar();
     }
 }
