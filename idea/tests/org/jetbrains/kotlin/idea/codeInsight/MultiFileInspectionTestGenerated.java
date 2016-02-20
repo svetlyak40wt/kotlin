@@ -35,6 +35,12 @@ public class MultiFileInspectionTestGenerated extends AbstractMultiFileInspectio
         KotlinTestUtils.assertAllTestsPresentInSingleGeneratedClass(this.getClass(), new File("idea/testData/multiFileInspections"), Pattern.compile("^(.+)\\.test$"));
     }
 
+    @TestMetadata("finalClassOrFunWithSpringAnnotation/finalClassOrFunWithSpringAnnotation.test")
+    public void testFinalClassOrFunWithSpringAnnotation_FinalClassOrFunWithSpringAnnotation() throws Exception {
+        String fileName = KotlinTestUtils.navigationMetadata("idea/testData/multiFileInspections/finalClassOrFunWithSpringAnnotation/finalClassOrFunWithSpringAnnotation.test");
+        doTest(fileName);
+    }
+
     @TestMetadata("invalidBundleOrProperty/invalidBundleOrProperty.test")
     public void testInvalidBundleOrProperty_InvalidBundleOrProperty() throws Exception {
         String fileName = KotlinTestUtils.navigationMetadata("idea/testData/multiFileInspections/invalidBundleOrProperty/invalidBundleOrProperty.test");

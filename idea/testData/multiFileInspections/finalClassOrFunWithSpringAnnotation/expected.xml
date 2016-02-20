@@ -1,0 +1,28 @@
+<problems>
+    <problem>
+        <file>MessagePrinter.kt</file>
+        <line>7</line>
+        <module>testFinalClassOrFunWithSpringAnnotation_FinalClassOrFunWithSpringAnnotation_0</module>
+        <entry_point TYPE="file" FQNAME="MessagePrinter.kt" />
+        <problem_class severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Final class or function with Spring annotation</problem_class>
+        <description>@Component class should be declared open</description>
+    </problem>
+
+    <problem>
+        <file>Application.kt</file>
+        <line>11</line>
+        <module>testFinalClassOrFunWithSpringAnnotation_FinalClassOrFunWithSpringAnnotation_0</module>
+        <entry_point TYPE="file" FQNAME="Application.kt" />
+        <problem_class severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Final class or function with Spring annotation</problem_class>
+        <description>@Configuration class should be declared open</description>
+    </problem>
+
+    <problem>
+        <file>Application.kt</file>
+        <line>13</line>
+        <module>testFinalClassOrFunWithSpringAnnotation_FinalClassOrFunWithSpringAnnotation_0</module>
+        <entry_point TYPE="file" FQNAME="Application.kt" />
+        <problem_class severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Final class or function with Spring annotation</problem_class>
+        <description>@Bean function should be declared open</description>
+    </problem>
+</problems>
