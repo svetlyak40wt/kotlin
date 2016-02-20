@@ -13,3 +13,9 @@
 - Place comments from the middle of the call to the end
 - Drop line breaks between operator arguments (except '+', "-", "&&" and "||")
 - Add non-null assertions on call site for non-null parameters
+
+### IDE
+
+New features:
+
+- [KT-11098](https://youtrack.jetbrains.com/issue/KT-11098) Inspection on final classes/functions annotated with Spring @Configuration/@Component/@Bean
