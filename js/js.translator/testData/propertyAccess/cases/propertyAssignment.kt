@@ -8,7 +8,10 @@ class A(var x: Int) {
 }
 
 object B {
-    val foo = A(42)
+    private var holder = A(42)
+
+    val foo: A
+        get() = holder
 }
 
 fun box(): String {
