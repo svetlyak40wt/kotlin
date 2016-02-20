@@ -197,8 +197,4 @@ public final class MiscTest extends AbstractExpressionTest {
     public void testToGeneratorInStdlib() throws Exception {
         checkFooBoxIsOk();
     }
-
-    public void testPropertyAssignment() throws Exception {
-        checkFooBoxIsOk();
-    }
 }

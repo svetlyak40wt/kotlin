@@ -23,6 +23,7 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.kotlin.descriptors.ClassDescriptor;
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor;
 import org.jetbrains.kotlin.descriptors.PropertyDescriptor;
+import org.jetbrains.kotlin.js.translate.utils.JsDescriptorUtils;
 import org.jetbrains.kotlin.lexer.KtToken;
 import org.jetbrains.kotlin.psi.*;
 import org.jetbrains.kotlin.types.expressions.OperatorConventions;
@@ -91,7 +92,8 @@ public abstract class AssignmentTranslator extends AbstractTranslator {
             KtSimpleNameExpression nameExpression = (KtSimpleNameExpression) expression;
             DeclarationDescriptor descriptor = getDescriptorForReferenceExpression(context.bindingContext(), nameExpression);
             return isReferenceToBackingFieldFromConstructor(descriptor, context);
-        } else if (expression instanceof KtDotQualifiedExpression) {
+        }
+        else if (expression instanceof KtDotQualifiedExpression) {
             KtDotQualifiedExpression qualifiedExpression = (KtDotQualifiedExpression) expression;
             if (qualifiedExpression.getReceiverExpression() instanceof KtThisExpression &&
                 qualifiedExpression.getSelectorExpression() instanceof KtSimpleNameExpression) {
