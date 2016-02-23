@@ -84,11 +84,7 @@ class LazyJavaPackageScope(
             is KotlinClassLookupResult.SyntheticClass -> null
             is KotlinClassLookupResult.NotFound -> {
                 c.components.finder.findClass(classId)?.let { javaClass ->
-                    c.javaClassResolver.resolveClass(javaClass).apply {
-                        assert(this == null || this.containingDeclaration == ownerDescriptor) {
-                            "Wrong package fragment for $this, expected $ownerDescriptor"
-                        }
-                    }
+                    ownerDescriptor.resolveTopLevelClass(javaClass)
                 }
             }
         }

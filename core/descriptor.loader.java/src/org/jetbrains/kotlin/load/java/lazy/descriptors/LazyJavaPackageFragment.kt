@@ -16,6 +16,7 @@
 
 package org.jetbrains.kotlin.load.java.lazy.descriptors
 
+import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.SourceElement
 import org.jetbrains.kotlin.descriptors.impl.PackageFragmentDescriptorImpl
 import org.jetbrains.kotlin.load.java.lazy.LazyJavaResolverContext
@@ -34,9 +35,8 @@ class LazyJavaPackageFragment(
         LazyJavaPackageScope(c, jPackage, this)
     }
 
-    private val topLevelClasses = c.storageManager.createMemoizedFunctionWithNullableValues {
-        javaClass: JavaClass ->
-        LazyJavaClassDescriptor(c, this, javaClass.fqName!!, javaClass)
+    internal val topLevelClassPlacedInJavaFileWithDifferentName = c.storageManager.createMemoizedFunction {
+        javaClass: JavaClass -> resolveTopLevelClass(javaClass)
     }
 
     internal val kotlinBinaryClasses by c.storageManager.createLazyValue {
@@ -46,7 +46,7 @@ class LazyJavaPackageFragment(
         }
     }
 
-    internal fun resolveTopLevelClass(javaClass: JavaClass) = topLevelClasses(javaClass)
+    internal fun resolveTopLevelClass(javaClass: JavaClass): ClassDescriptor = LazyJavaClassDescriptor(c, this, javaClass.fqName!!, javaClass)
 
     override fun getMemberScope() = scope
 
