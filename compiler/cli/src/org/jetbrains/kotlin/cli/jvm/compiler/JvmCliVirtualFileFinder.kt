@@ -19,6 +19,7 @@ package org.jetbrains.kotlin.cli.jvm.compiler
 import com.intellij.openapi.vfs.VirtualFile
 import org.jetbrains.kotlin.load.kotlin.VirtualFileKotlinClassFinder
 import org.jetbrains.kotlin.name.ClassId
+import org.jetbrains.kotlin.name.FqName
 
 class JvmCliVirtualFileFinder(private val index: JvmDependenciesIndex) : VirtualFileKotlinClassFinder() {
 
@@ -30,4 +31,6 @@ class JvmCliVirtualFileFinder(private val index: JvmDependenciesIndex) : Virtual
             }
         }
     }
+
+    override fun knownClassNamesInPackage(packageFqName: FqName): Set<String> = emptySet()
 }

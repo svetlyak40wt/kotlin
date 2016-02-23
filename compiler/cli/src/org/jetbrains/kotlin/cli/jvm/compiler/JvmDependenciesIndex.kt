@@ -99,6 +99,24 @@ class JvmDependenciesIndex(_roots: List<JavaRoot>) {
         }
     }
 
+    fun collectKnownClassNamesInPackage(
+            packageFqName: FqName
+    ): Set<String> {
+        var result = hashSetOf<String>()
+        traverseDirectoriesInPackage(packageFqName, continueSearch = {
+            dir, rootType ->
+
+            for (child in dir.children) {
+                if (!child.name.endsWith(".java") && !child.name.endsWith(".class")) continue
+                result.add(child.nameWithoutExtension)
+            }
+
+            true
+        })
+
+        return result
+    }
+
     private data class HandleResult<T : Any>(val result: T?, val continueSearch: Boolean)
 
     private fun <T : Any> search(

@@ -38,6 +38,16 @@ class LazyJavaPackageScope(
         override val ownerDescriptor: LazyJavaPackageFragment
 ) : LazyJavaStaticScope(c) {
 
+    private val knownClassNamesInPackage = c.storageManager.createNullableLazyValue {
+        val kotlin = c.components.kotlinClassFinder.knownClassNamesInPackage(ownerDescriptor.fqName)
+        val java = c.components.finder.knownClassNamesInPackage(ownerDescriptor.fqName)
+
+        if (kotlin != null && java != null)
+            kotlin + java
+        else
+            null
+    }
+
     private val partToFacade = c.storageManager.createLazyValue {
         val result = hashMapOf<String, String>()
         kotlinClasses@for (kotlinClass in ownerDescriptor.kotlinBinaryClasses) {
@@ -88,6 +98,12 @@ class LazyJavaPackageScope(
         if (!SpecialNames.isSafeIdentifier(name)) return null
 
         recordLookup(name, location)
+
+        val topLevelClasses = knownClassNamesInPackage()
+        if (topLevelClasses != null && name.asString() !in topLevelClasses) {
+            return null
+        }
+
         return classes(name)
     }
 

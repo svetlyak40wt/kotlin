@@ -16,6 +16,7 @@
 
 package org.jetbrains.kotlin.load.kotlin
 
+import org.jetbrains.annotations.TestOnly
 import org.jetbrains.kotlin.load.java.structure.JavaClass
 import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
 import org.jetbrains.kotlin.name.ClassId
@@ -27,6 +28,7 @@ abstract class VirtualFileKotlinClassFinder : JvmVirtualFileFinder {
         return KotlinBinaryClassCache.getKotlinBinaryClass(file)
     }
 
+    @TestOnly
     override fun findKotlinClass(javaClass: JavaClass): KotlinJvmBinaryClass? {
         var file = (javaClass as JavaClassImpl).psi.containingFile!!.virtualFile ?: return null
         if (javaClass.getOuterClass() != null) {
