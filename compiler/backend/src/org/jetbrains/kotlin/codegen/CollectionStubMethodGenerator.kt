@@ -239,7 +239,7 @@ class CollectionStubMethodGenerator(
         return KotlinTypeImpl.create(Annotations.EMPTY, classDescriptor, false, typeArguments)
     }
 
-    private fun FunctionDescriptor.signature(): JvmMethodSignature = typeMapper.mapSignature(this)
+    private fun FunctionDescriptor.signature(): JvmMethodSignature = typeMapper.mapSignature(this, false)
 
     private fun generateMethodStub(signature: JvmMethodSignature, synthetic: Boolean) {
         // TODO: investigate if it makes sense to generate abstract stubs in traits

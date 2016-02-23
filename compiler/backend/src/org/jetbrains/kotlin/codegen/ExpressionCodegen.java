@@ -43,6 +43,7 @@ import org.jetbrains.kotlin.codegen.intrinsics.IntrinsicMethod;
 import org.jetbrains.kotlin.codegen.intrinsics.IntrinsicMethods;
 import org.jetbrains.kotlin.codegen.intrinsics.IntrinsicPropertyGetter;
 import org.jetbrains.kotlin.codegen.pseudoInsns.PseudoInsnsKt;
+import org.jetbrains.kotlin.codegen.signature.BothGenericSignatureWriter;
 import org.jetbrains.kotlin.codegen.signature.BothSignatureWriter;
 import org.jetbrains.kotlin.codegen.state.GenerationState;
 import org.jetbrains.kotlin.codegen.state.JetTypeMapper;
@@ -92,6 +93,7 @@ import org.jetbrains.org.objectweb.asm.MethodVisitor;
 import org.jetbrains.org.objectweb.asm.Opcodes;
 import org.jetbrains.org.objectweb.asm.Type;
 import org.jetbrains.org.objectweb.asm.commons.InstructionAdapter;
+import org.jetbrains.org.objectweb.asm.commons.Method;
 
 import java.util.*;
 
@@ -1485,8 +1487,8 @@ public class ExpressionCodegen extends KtVisitor<StackValue, StackValue> impleme
                 assert constructors.size() == 1 : "Unexpected number of constructors for class: " + classDescriptor + " " + constructors;
                 ConstructorDescriptor constructorDescriptor = CollectionsKt.single(constructors);
 
-                JvmMethodSignature constructor = typeMapper.mapSignature(SamCodegenUtil.resolveSamAdapter(constructorDescriptor));
-                v.invokespecial(type.getInternalName(), "<init>", constructor.getAsmMethod().getDescriptor(), false);
+                Method constructor = typeMapper.mapAsmMethod(SamCodegenUtil.resolveSamAdapter(constructorDescriptor));
+                v.invokespecial(type.getInternalName(), "<init>", constructor.getDescriptor(), false);
                 return Unit.INSTANCE;
             }
         });
@@ -2520,7 +2522,7 @@ public class ExpressionCodegen extends KtVisitor<StackValue, StackValue> impleme
             if (typeParameterAndReificationArgument == null) {
                 KotlinType approximatedType = CapturedTypeApproximationKt.approximateCapturedTypes(entry.getValue()).getUpper();
                 // type is not generic
-                BothSignatureWriter signatureWriter = new BothSignatureWriter(BothSignatureWriter.Mode.TYPE);
+                BothSignatureWriter signatureWriter = new BothGenericSignatureWriter(BothGenericSignatureWriter.Mode.TYPE);
                 Type asmType = typeMapper.mapTypeParameter(approximatedType, signatureWriter);
 
                 mappings.addParameterMappingToType(
