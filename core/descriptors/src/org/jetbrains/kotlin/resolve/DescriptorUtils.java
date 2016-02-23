@@ -24,6 +24,8 @@ import org.jetbrains.kotlin.descriptors.annotations.Annotated;
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor;
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationWithTarget;
 import org.jetbrains.kotlin.descriptors.annotations.Annotations;
+import org.jetbrains.kotlin.descriptors.impl.LazyPackageViewDescriptorImpl;
+import org.jetbrains.kotlin.descriptors.impl.PackageFragmentDescriptorImpl;
 import org.jetbrains.kotlin.incremental.components.LookupLocation;
 import org.jetbrains.kotlin.name.FqName;
 import org.jetbrains.kotlin.name.FqNameUnsafe;
@@ -102,10 +104,19 @@ public class DescriptorUtils {
             return FqName.ROOT;
         }
 
+        if (descriptor instanceof PackageFragmentDescriptorImpl) {
+            return ((PackageFragmentDescriptorImpl) descriptor).getFqName();
+        }
+
+        if (descriptor instanceof LazyPackageViewDescriptorImpl) {
+            return ((LazyPackageViewDescriptorImpl) descriptor).getFqName();
+        }
+
         if (descriptor instanceof PackageViewDescriptor) {
             return ((PackageViewDescriptor) descriptor).getFqName();
         }
-        else if (descriptor instanceof PackageFragmentDescriptor) {
+
+        if (descriptor instanceof PackageFragmentDescriptor) {
             return ((PackageFragmentDescriptor) descriptor).getFqName();
         }
 
