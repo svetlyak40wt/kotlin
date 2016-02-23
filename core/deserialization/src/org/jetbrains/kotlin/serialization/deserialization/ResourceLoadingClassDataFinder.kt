@@ -33,10 +33,15 @@ class ResourceLoadingClassDataFinder(
         val packageFragment = packageFragmentProvider.getPackageFragments(classId.packageFqName).singleOrNull()
                                       as? DeserializedPackageFragment ?: return null
 
-        val classProto = packageFragment.classIdToProto?.get(classId) ?: run {
-            val stream = loadResource(serializedResourcePaths.getClassMetadataPath(classId)) ?: return null
-            ProtoBuf.Class.parseFrom(stream, serializedResourcePaths.extensionRegistry)
-        }
+        val classIdToProto = packageFragment.classIdToProto
+        val classProto =
+                if (classIdToProto != null) {
+                    classIdToProto[classId]
+                }
+                else {
+                    val stream = loadResource(serializedResourcePaths.getClassMetadataPath(classId)) ?: return null
+                    ProtoBuf.Class.parseFrom(stream, serializedResourcePaths.extensionRegistry)
+                } ?: return null
 
         return ClassDataWithSource(ClassData(packageFragment.nameResolver, classProto))
     }
