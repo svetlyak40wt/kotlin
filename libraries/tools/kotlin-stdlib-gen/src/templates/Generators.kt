@@ -497,7 +497,7 @@ fun generators(): List<GenericFunction> {
 
             @param size of a window, shouldn't be negative
             @param step positive value defines a sliding step
-            @param dropTrailing is a flag to drop trailing window that smaller than the specified [size]
+            @param dropTrailing is a flag to drop trailing window that smaller than the specified [size]. Has no effect when window [size] = 0.
 
             @return a sequence of windows, possibly empty
             """
@@ -535,7 +535,7 @@ fun generators(): List<GenericFunction> {
 
             @param size of a window, shouldn't be negative
             @param step positive value defines a sliding step
-            @param dropTrailing is a flag to drop trailing window that smaller than the specified [size]
+            @param dropTrailing is a flag to drop trailing window that smaller than the specified [size]. Has no effect when window [size] = 0.
 
             @return a sequence of windows, possibly empty
             """
@@ -573,7 +573,7 @@ fun generators(): List<GenericFunction> {
 
             @param size of a window, shouldn't be negative
             @param step positive or negative value defines a sliding step, positive for forward sliding and negative for backward
-            @param dropTrailing is a flag to drop trailing window that smaller than the specified [size]
+            @param dropTrailing is a flag to drop trailing window that smaller than the specified [size]. Has no effect when window [size] = 0.
 
             @return a sequence of windows, possibly empty
             """
@@ -611,7 +611,7 @@ fun generators(): List<GenericFunction> {
 
             @param size of a window, shouldn't be negative
             @param step positive value defines a sliding step, positive for forward sliding and negative for backward
-            @param dropTrailing is a flag to drop trailing window that smaller than the specified [size]
+            @param dropTrailing is a flag to drop trailing window that smaller than the specified [size]. Has no effect when window [size] = 0.
 
             @return a sequence of windows, possibly empty
             """
@@ -647,7 +647,7 @@ fun generators(): List<GenericFunction> {
 
             @param size of a window, shouldn't be negative
             @param step positive value defines a sliding step, positive for forward sliding and negative for backward
-            @param dropTrailing is a flag to drop trailing window that smaller than the specified [size]
+            @param dropTrailing is a flag to drop trailing window that smaller than the specified [size]. Has no effect when window [size] = 0.
 
             @return a sequence of windows, possibly empty
             """
@@ -684,7 +684,7 @@ fun generators(): List<GenericFunction> {
 
             @param size of a window, shouldn't be negative
             @param step positive or negative value defines a sliding step, positive for forward sliding and negative for backward
-            @param dropTrailing is a flag to drop trailing window that smaller than the specified [size]
+            @param dropTrailing is a flag to drop trailing window that smaller than the specified [size]. Has no effect when window [size] = 0.
 
             @return a sequence of windows, possibly empty
             """
@@ -720,7 +720,7 @@ fun generators(): List<GenericFunction> {
 
             @param size of a window, shouldn't be negative
             @param step positive value defines a sliding step
-            @param dropTrailing is a flag to drop trailing window that smaller than the specified [size]
+            @param dropTrailing is a flag to drop trailing window that smaller than the specified [size]. Has no effect when window [size] = 0.
 
             @return a sequence of windows, possibly empty
             """
