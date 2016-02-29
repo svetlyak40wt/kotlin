@@ -79,6 +79,7 @@ import org.jetbrains.org.objectweb.asm.Type;
 import org.jetbrains.org.objectweb.asm.commons.Method;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.jetbrains.kotlin.builtins.KotlinBuiltIns.isUnit;
@@ -1007,7 +1008,7 @@ public class JetTypeMapper {
 
         checkOwnerCompatibility(f);
 
-        BothSignatureWriter sw = new BothSignatureWriter(BothSignatureWriter.Mode.METHOD);
+        BothSignatureWriter sw = TypeMapperUtilsKt.createSignatureWriter(f, kind);
 
         if (f instanceof ConstructorDescriptor) {
             sw.writeParametersStart();
@@ -1024,7 +1025,14 @@ public class JetTypeMapper {
             writeVoidReturn(sw);
         }
         else {
-            writeFormalTypeParameters(getDirectMember(f).getTypeParameters(), sw);
+            CallableMemberDescriptor member = getDirectMember(f);
+            if (OwnerKind.DEFAULT_IMPLS == kind) {
+                ClassDescriptor declaration = (ClassDescriptor) f.getContainingDeclaration();
+                writeFormalTypeParameters(declaration.getDeclaredTypeParameters(), member.getTypeParameters(), sw);
+            }
+            else {
+                writeFormalTypeParameters(member.getTypeParameters(), sw);
+            }
 
             sw.writeParametersStart();
             writeThisIfNeeded(f, kind, sw);
@@ -1187,7 +1195,8 @@ public class JetTypeMapper {
             @NotNull BothSignatureWriter sw
     ) {
         ClassDescriptor thisType;
-        if (kind == OwnerKind.DEFAULT_IMPLS) {
+        boolean isDefaultImpls = kind == OwnerKind.DEFAULT_IMPLS;
+        if (isDefaultImpls) {
             thisType = getTraitImplThisParameterClass((ClassDescriptor) descriptor.getContainingDeclaration());
         }
         else if (isAccessor(descriptor) && descriptor.getDispatchReceiverParameter() != null) {
@@ -1195,7 +1204,13 @@ public class JetTypeMapper {
         }
         else return;
 
+        if (isDefaultImpls) {
+            sw.enableTypeParametersMapping(true);
+        }
         writeParameter(sw, JvmMethodParameterKind.THIS, thisType.getDefaultType(), descriptor);
+        if (isDefaultImpls) {
+            sw.enableTypeParametersMapping(false);
+        }
     }
 
     @NotNull
@@ -1209,6 +1224,20 @@ public class JetTypeMapper {
     }
 
     public void writeFormalTypeParameters(@NotNull List<TypeParameterDescriptor> typeParameters, @NotNull BothSignatureWriter sw) {
+        writeFormalTypeParameters(Collections.<TypeParameterDescriptor>emptyList(), typeParameters, sw);
+    }
+
+    private void writeFormalTypeParameters(
+            @NotNull List<TypeParameterDescriptor> additionalInterfaceTypeParameters,
+            @NotNull List<TypeParameterDescriptor> typeParameters,
+            @NotNull BothSignatureWriter sw
+    ) {
+        sw.enableTypeParametersMapping(true);
+        for (TypeParameterDescriptor typeParameter : additionalInterfaceTypeParameters) {
+            writeFormalTypeParameter(typeParameter, sw);
+        }
+        sw.enableTypeParametersMapping(false);
+
         for (TypeParameterDescriptor typeParameter : typeParameters) {
             writeFormalTypeParameter(typeParameter, sw);
         }

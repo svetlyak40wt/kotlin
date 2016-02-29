@@ -17,6 +17,7 @@
 package org.jetbrains.kotlin.codegen.signature;
 
 import com.intellij.util.containers.Stack;
+import kotlin.jvm.functions.Function1;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.kotlin.resolve.jvm.jvmSignature.JvmMethodParameterKind;
@@ -24,6 +25,8 @@ import org.jetbrains.kotlin.resolve.jvm.jvmSignature.JvmMethodParameterSignature
 import org.jetbrains.kotlin.resolve.jvm.jvmSignature.JvmMethodSignature;
 import org.jetbrains.org.objectweb.asm.Type;
 import org.jetbrains.org.objectweb.asm.commons.Method;
+import org.jetbrains.org.objectweb.asm.commons.Remapper;
+import org.jetbrains.org.objectweb.asm.commons.RemappingSignatureAdapter;
 import org.jetbrains.org.objectweb.asm.signature.SignatureVisitor;
 import org.jetbrains.org.objectweb.asm.signature.SignatureWriter;
 import org.jetbrains.org.objectweb.asm.util.CheckSignatureAdapter;
@@ -61,8 +64,31 @@ public class BothSignatureWriter {
 
     private int currentSignatureSize = 0;
 
+    private boolean enableTypeParametersMapping;
+
     public BothSignatureWriter(@NotNull Mode mode) {
-        this.signatureVisitor = new CheckSignatureAdapter(mode.asmType, signatureWriter);
+        this(mode, null);
+    }
+
+    public BothSignatureWriter(@NotNull Mode mode, @Nullable final Function1<String, String> remapper) {
+        this.signatureVisitor = remapper == null ? new CheckSignatureAdapter(mode.asmType, signatureWriter) :
+                                new CheckSignatureAdapter(
+                                        mode.asmType,
+                                        new RemappingSignatureAdapter(signatureWriter, new Remapper() {
+                                        }) {
+                                            @Override
+                                            public void visitFormalTypeParameter(@NotNull String name) {
+                                                super.visitFormalTypeParameter(
+                                                        enableTypeParametersMapping ? remapper.invoke(name) : name);
+                                            }
+
+                                            @Override
+                                            public void visitTypeVariable(@NotNull String name) {
+                                                super.visitTypeVariable(
+                                                        enableTypeParametersMapping ? remapper.invoke(name) : name);
+                                            }
+                                        }
+                                );
     }
 
     private final Stack<SignatureVisitor> visitors = new Stack<SignatureVisitor>();
@@ -279,6 +305,10 @@ public class BothSignatureWriter {
     @Override
     public String toString() {
         return signatureWriter.toString();
+    }
+
+    public void enableTypeParametersMapping(Boolean enableMapping) {
+        this.enableTypeParametersMapping = enableMapping;
     }
 }
 
