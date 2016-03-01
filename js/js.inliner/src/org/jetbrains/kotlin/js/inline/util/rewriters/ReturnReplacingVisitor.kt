@@ -53,7 +53,7 @@ class ReturnReplacingVisitor(
 
         var labelName = blockInfo.label
         if (labelName == null) {
-            labelName = blockInfo.namingContext.getFreshName(blockInfo.labelPrefix + "\$break")
+            labelName = blockInfo.namingContext.getFreshName("${blockInfo.labelPrefix}break")
             blockInfo.label = labelName
         }
         blockInfo.breakCount++
@@ -64,7 +64,7 @@ class ReturnReplacingVisitor(
         if (returnExpression == null) return null
 
         if (blockInfo.result == null) {
-            val name = blockInfo.namingContext.getFreshName(blockInfo.labelPrefix)
+            val name = blockInfo.namingContext.getFreshName("${blockInfo.labelPrefix}result")
             blockInfo.result = name.makeRef()
             blockInfo.nameToDeclare = name
         }

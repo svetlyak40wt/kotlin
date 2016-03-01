@@ -161,7 +161,7 @@ private constructor(
 
             val nameToDeclare = block.nameToDeclare
             if (nameToDeclare != null) {
-                block.namingContext.newVar(nameToDeclare)
+                inliningContext.statementContext.addPrevious(JsAstUtils.newVar(nameToDeclare, null))
             }
 
             return InlineableResult(inlineableBody, block.result)
