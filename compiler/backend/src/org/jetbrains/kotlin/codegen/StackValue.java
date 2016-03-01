@@ -991,7 +991,7 @@ public abstract class StackValue {
             }
 
             for (ValueParameterDescriptor valueParameter : valueParameters) {
-                if (typeMapper.mapType(valueParameter.getType()).getSize() != 1) {
+                if (typeMapper.mapType(valueParameter.getOriginal().getType()).getSize() != 1) {
                     return false;
                 }
             }

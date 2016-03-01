@@ -557,6 +557,10 @@ public class AsmUtil {
     }
 
     public static void genIncrement(Type expectedType, int myDelta, InstructionAdapter v) {
+        genIncrement(expectedType, expectedType, myDelta, v);
+    }
+
+    public static void genIncrement(Type expectedType, Type baseType, int myDelta, InstructionAdapter v) {
         if (expectedType == Type.LONG_TYPE) {
             v.lconst(myDelta);
         }
@@ -567,9 +571,28 @@ public class AsmUtil {
             v.dconst(myDelta);
         }
         else {
-            v.iconst(myDelta);
-            v.add(Type.INT_TYPE);
-            StackValue.coerce(Type.INT_TYPE, expectedType, v);
+            switch (baseType.getSize()) {
+                case 1:
+                    if (baseType == Type.FLOAT_TYPE) {
+                        v.fconst(myDelta);
+                    }
+                    else {
+                        v.iconst(myDelta);
+                    }
+                    break;
+                case 2:
+                    if (baseType == Type.DOUBLE_TYPE) {
+                        v.dconst(myDelta);
+                    }
+                    else {
+                        v.lconst(myDelta);
+                    }
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unexpected base value type: " + baseType.getInternalName());
+            }
+            v.add(baseType);
+            StackValue.coerce(baseType, expectedType, v);
             return;
         }
         v.add(expectedType);
@@ -759,21 +782,24 @@ public class AsmUtil {
     }
 
     public static void dup(@NotNull InstructionAdapter v, @NotNull Type topOfStack, @NotNull Type afterTop) {
-        if (topOfStack.getSize() == 0 && afterTop.getSize() == 0) {
+        int topSize = topOfStack.getSize();
+        int afterTopSize = afterTop.getSize();
+        if (topSize == 0 && afterTopSize == 0) {
             return;
         }
 
-        if (topOfStack.getSize() == 0) {
+        if (topSize == 0) {
             dup(v, afterTop);
         }
-        else if (afterTop.getSize() == 0) {
+        else if (afterTopSize == 0) {
             dup(v, topOfStack);
         }
-        else if (afterTop.getSize() == 1) {
-            if (topOfStack.getSize() == 1) {
+        else if (afterTopSize == 1) {
+            if (topSize == 1) {
                 dup(v, 2);
             }
             else {
+                // s1a s2b => s1a s2b s1a s2b
                 v.dup2X1();
                 v.pop2();
                 v.dupX2();
@@ -782,9 +808,28 @@ public class AsmUtil {
                 v.dup2X1();
             }
         }
+        else if (afterTopSize == 2) {
+            if (topSize == 1) {
+                // s2a s1b => s2a s1b s2a s1b
+                v.dupX2();
+                v.dupX2();
+                v.pop();
+                v.dup2X2();
+                v.dup2X1();
+                v.pop2();
+            }
+            else {
+                // s2a s2b => s2a s2b s2a s2b
+                v.dup2X2();
+                v.pop2();
+                v.dup2X2();
+                v.dup2X2();
+                v.pop2();
+                v.dup2X2();
+            }
+        }
         else {
-            //Note: it's possible to write dup3 and dup4
-            throw new UnsupportedOperationException("Don't know how generate dup3/dup4 for: " + topOfStack + " and " + afterTop);
+            throw new UnsupportedOperationException("Don't know how generate dup for: " + topOfStack + " and " + afterTop);
         }
     }
 
