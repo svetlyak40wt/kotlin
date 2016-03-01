@@ -21,7 +21,7 @@ import org.jetbrains.kotlin.test.KotlinTestUtils
 import org.jetbrains.kotlin.test.KotlinTestUtils.TestFileFactory
 import java.io.File
 
-open class KotlinJSMutliFileTest(path: String) : SingleFileTranslationTest(path) {
+abstract class KotlinJSMutliFileTest(path: String) : SingleFileTranslationTest(path) {
     var tempDir: File? = null
 
     override fun doTest(filename: String) {
