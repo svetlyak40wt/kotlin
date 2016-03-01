@@ -1068,6 +1068,10 @@ fun main(args: Array<String>) {
         testClass<AbstractSuperTest>() {
             model("codegen/box/super/", targetBackend = TargetBackend.JS)
         }
+
+        testClass<AbstractLocalClassesTest>() {
+            model("codegen/box/localClasses/", targetBackend = TargetBackend.JS)
+        }
     }
 }
 
