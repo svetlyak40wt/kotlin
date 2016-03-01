@@ -19,7 +19,7 @@ import test.*
 
 var p = "fail"
 
-fun test() {
+fun test1() {
     foo {
         try {
             p = "O"
@@ -33,6 +33,6 @@ fun test() {
 }
 
 fun box(): String {
-    test()
+    test1()
     return p
 }

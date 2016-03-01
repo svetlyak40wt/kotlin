@@ -7,7 +7,7 @@ inline fun foo(f: () -> Unit) {
 // FILE: 2.kt
 
 //NO_CHECK_LAMBDA_INLINING
-fun test(): String = fun (): String {
+fun test1(): String = fun (): String {
     foo { return "OK" }
     return "fail"
 } ()
@@ -18,7 +18,7 @@ fun test2(): String = (l@ fun (): String {
 }) ()
 
 fun box(): String {
-    if (test() != "OK") return "fail 1: ${test()}"
+    if (test1() != "OK") return "fail 1: ${test1()}"
 
     if (test2() != "OK") return "fail 2: ${test2()}"
 
