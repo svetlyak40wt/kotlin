@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2015 JetBrains s.r.o.
+ * Copyright 2010-2016 JetBrains s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,7 @@
 
 package org.jetbrains.kotlin.js.translate.context
 
-import com.google.dart.compiler.backend.js.ast.JsExpression
-import com.google.dart.compiler.backend.js.ast.JsPropertyInitializer
-import com.google.dart.compiler.backend.js.ast.JsNameRef
-import com.google.dart.compiler.backend.js.ast.JsObjectScope
-import com.google.dart.compiler.backend.js.ast.JsFunction
+import com.google.dart.compiler.backend.js.ast.*
 import com.google.dart.compiler.backend.js.ast.metadata.staticRef
 
 class DefinitionPlace(

@@ -17,15 +17,13 @@
 package org.jetbrains.kotlin.js.inline
 
 import com.google.dart.compiler.backend.js.ast.*
-import com.google.dart.compiler.util.AstUtil
-import com.intellij.util.containers.ContainerUtil
+import com.google.dart.compiler.backend.js.ast.metadata.isNonLocal
 import org.jetbrains.kotlin.js.inline.clean.removeDefaultInitializers
 import org.jetbrains.kotlin.js.inline.context.InliningContext
 import org.jetbrains.kotlin.js.inline.context.NamingContext
 import org.jetbrains.kotlin.js.inline.util.*
 import org.jetbrains.kotlin.js.inline.util.rewriters.ReturnReplacingVisitor
 import org.jetbrains.kotlin.js.translate.utils.JsAstUtils.newVar
-import org.jetbrains.kotlin.js.translate.utils.jsAstUtils.*
 
 class FunctionInlineMutator
 private constructor(
@@ -101,14 +99,17 @@ private constructor(
             return
         }
 
-        val returnCount = collectInstances(JsReturn::class.java, body).size
-        if (returnCount == 0) {
+        val collectInstances = collectInstances(JsReturn::class.java, body)
+        val hasNonLocals = collectInstances.any { it.isNonLocal }
+
+        val returnCount = collectInstances.size
+        if (!hasNonLocals && returnCount == 0) {
             // TODO return Unit (KT-5647)
             resultExpr = JsLiteral.UNDEFINED
             return
         }
 
-        if (returnCount == 1) {
+        if (!hasNonLocals && returnCount == 1) {
             val statements = body.statements
             val lastTopLevelStatement = statements[statements.lastIndex]
 

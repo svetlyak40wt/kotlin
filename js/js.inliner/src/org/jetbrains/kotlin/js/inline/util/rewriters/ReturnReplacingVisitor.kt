@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2015 JetBrains s.r.o.
+ * Copyright 2010-2016 JetBrains s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package org.jetbrains.kotlin.js.inline.util.rewriters
 
 import com.google.dart.compiler.backend.js.ast.*
+import com.google.dart.compiler.backend.js.ast.metadata.isNonLocal
 import org.jetbrains.kotlin.js.inline.util.canHaveSideEffect
 import org.jetbrains.kotlin.js.translate.utils.JsAstUtils
 
@@ -33,6 +34,8 @@ class ReturnReplacingVisitor(private val resultRef: JsNameRef?, private val brea
     override fun visit(x: JsFunction, ctx: JsContext<JsNode>): Boolean = false
 
     override fun endVisit(x: JsReturn, ctx: JsContext<JsNode>) {
+        if (x.isNonLocal) return
+
         ctx.removeMe()
 
         val returnReplacement = getReturnReplacement(x.expression)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 JetBrains s.r.o.
+ * Copyright 2010-2016 JetBrains s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,8 @@ var JsFunction.isLocal: Boolean by MetadataProperty(default = false)
 var JsParameter.hasDefaultValue: Boolean by MetadataProperty(default = false)
 
 var JsInvocation.typeCheck: TypeCheck? by MetadataProperty(default = null)
+
+var JsReturn.isNonLocal: Boolean by MetadataProperty(default = false)
 
 enum class TypeCheck {
     TYPEOF,

@@ -61,10 +61,10 @@ import static org.jetbrains.kotlin.js.translate.utils.JsAstUtils.convertToStatem
 import static org.jetbrains.kotlin.js.translate.utils.JsAstUtils.newVar;
 import static org.jetbrains.kotlin.js.translate.utils.JsDescriptorUtils.getReceiverParameterForDeclaration;
 import static org.jetbrains.kotlin.js.translate.utils.TranslationUtils.translateInitializerForProperty;
-import static org.jetbrains.kotlin.resolve.BindingContext.DECLARATION_TO_DESCRIPTOR;
-import static org.jetbrains.kotlin.resolve.BindingContext.LABEL_TARGET;
-import static org.jetbrains.kotlin.resolve.BindingContext.REFERENCE_TARGET;
+import static org.jetbrains.kotlin.resolve.BindingContext.*;
 import static org.jetbrains.kotlin.resolve.BindingContextUtils.isVarCapturedInClosure;
+import static org.jetbrains.kotlin.types.expressions.ExpressionTypingUtils.isFunctionExpression;
+import static org.jetbrains.kotlin.types.expressions.ExpressionTypingUtils.isFunctionLiteral;
 
 public final class ExpressionVisitor extends TranslatorVisitor<JsNode> {
     @Override
@@ -137,24 +137,80 @@ public final class ExpressionVisitor extends TranslatorVisitor<JsNode> {
 
     @Override
     @NotNull
-    public JsNode visitReturnExpression(@NotNull KtReturnExpression jetReturnExpression,
-            @NotNull TranslationContext context) {
-        KtExpression returned = jetReturnExpression.getReturnedExpression();
+    public JsNode visitReturnExpression(@NotNull KtReturnExpression returnExpression, @NotNull TranslationContext context) {
+        KtExpression returned = returnExpression.getReturnedExpression();
 
         // TODO: add related descriptor to context and use it here
-        KtDeclarationWithBody parent = PsiTreeUtil.getParentOfType(jetReturnExpression, KtDeclarationWithBody.class);
+        KtDeclarationWithBody parent = PsiTreeUtil.getParentOfType(returnExpression, KtDeclarationWithBody.class);
         if (parent instanceof KtSecondaryConstructor) {
-            return new JsReturn(new JsNameRef(Namer.ANOTHER_THIS_PARAMETER_NAME)).source(jetReturnExpression);
+            return markReturnIfNeed(new JsNameRef(Namer.ANOTHER_THIS_PARAMETER_NAME), returnExpression, context);
         }
         if (returned == null) {
-            return new JsReturn(null).source(jetReturnExpression);
+            return markReturnIfNeed(null, returnExpression, context);
         }
         JsExpression jsReturnExpression = translateAsExpression(returned, context);
         if (JsAstUtils.isEmptyExpression(jsReturnExpression)) {
             return context.getEmptyExpression();
         }
-        return new JsReturn(jsReturnExpression).source(jetReturnExpression);
+        return markReturnIfNeed(jsReturnExpression, returnExpression, context);
     }
+
+    @NotNull
+    private JsNode markReturnIfNeed(
+            @Nullable JsExpression jsResult,
+            @NotNull KtReturnExpression returnExpression,
+            @NotNull TranslationContext context
+    ) {
+        JsReturn result = new JsReturn(jsResult);
+        DeclarationDescriptor descriptor = context.getDeclarationDescriptor();
+        if (descriptor instanceof CallableMemberDescriptor) {
+            MetadataProperties.setNonLocal(result, isNonLocalReturn((CallableMemberDescriptor) descriptor, returnExpression, context));
+        }
+        return result.source(returnExpression);
+    }
+
+    private boolean isNonLocalReturn(
+            @NotNull CallableMemberDescriptor descriptor,
+            @NotNull KtReturnExpression expression,
+            @NotNull TranslationContext context
+    ) {
+        //call inside lambda
+        if (isFunctionLiteral(descriptor) || isFunctionExpression(descriptor)) {
+            if (expression.getLabelName() == null) {
+                if (isFunctionLiteral(descriptor)) {
+                    //non labeled return couldn't be local in lambda
+                    //FunctionDescriptor containingFunction =
+                    //        BindingContextUtils.getContainingFunctionSkipFunctionLiterals(descriptor, true).getFirst();
+                    //FIRST_FUN_LABEL to prevent clashing with existing labels
+                    //return new NonLocalReturnInfo(typeMapper.mapReturnType(containingFunction), InlineCodegenUtil.FIRST_FUN_LABEL);
+                    return true;
+                } else {
+                    //local
+                    return false;
+                }
+            }
+
+            DeclarationDescriptor containingFunction = InlineUtil.getContainingClassOrFunctionDescriptor(descriptor, false);
+            //FunctionDescriptor containingFunction = BindingContextUtils.getContainingFunctionSkipFunctionLiterals(descriptor, true).getFirst();
+
+            PsiElement element = context.bindingContext().get(LABEL_TARGET, expression.getTargetLabel());
+            DeclarationDescriptor elementDescriptor = context.bindingContext().get(DECLARATION_TO_DESCRIPTOR, element);
+
+            //if (elementDescriptor == containingFunction) {
+            if (elementDescriptor != containingFunction) {
+                //DeclarationDescriptor elementDescriptor = context.bindingContext().get(DECLARATION_TO_DESCRIPTOR, element);
+                //assert element != null : "Expression should be not null " + expression.getText();
+                //assert elementDescriptor != null : "Descriptor should be not null: " + element.getText();
+                //return new NonLocalReturnInfo(typeMapper.mapReturnType((CallableDescriptor) elementDescriptor), expression.getLabelName());
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        return false;
+    }
+
 
     @Override
     @NotNull
