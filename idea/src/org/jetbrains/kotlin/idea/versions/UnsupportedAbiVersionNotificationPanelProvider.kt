@@ -52,6 +52,8 @@ import org.jetbrains.kotlin.idea.framework.getReflectJar
 import org.jetbrains.kotlin.idea.framework.getRuntimeJar
 import org.jetbrains.kotlin.idea.framework.getTestJar
 import org.jetbrains.kotlin.serialization.deserialization.BinaryVersion
+import java.awt.event.ComponentEvent
+import java.awt.event.ComponentListener
 import java.text.MessageFormat
 import java.util.*
 import javax.swing.Icon
@@ -178,7 +180,7 @@ class UnsupportedAbiVersionNotificationPanelProvider(private val project: Projec
 
     private fun createUpdatePluginLink(answer: ErrorNotificationPanel) {
         answer.createProgressAction("     Check...", "Update plugin") { link, updateLink ->
-            KotlinPluginUpdater.getInstance().runUpdateCheck { pluginUpdateStatus ->
+            KotlinPluginUpdater.getInstance().runCachedUpdate { pluginUpdateStatus ->
                 when (pluginUpdateStatus) {
                     is PluginUpdateStatus.Update -> {
                         link.isVisible = false
@@ -300,7 +302,21 @@ class UnsupportedAbiVersionNotificationPanelProvider(private val project: Projec
             val successLink = createActionLabel(successLinkText, {  })
             successLink.isVisible = false
 
-            updater(label, successLink)
+            myLinksPanel.addComponentListener(object : ComponentListener {
+                var isFirstResize = true
+                override fun componentMoved(p0: ComponentEvent?) {}
+
+                override fun componentResized(p0: ComponentEvent?) {
+                    if (isFirstResize) {
+                        isFirstResize = false
+                        updater(label, successLink)
+                    }
+                }
+
+                override fun componentHidden(p0: ComponentEvent?) {}
+
+                override fun componentShown(p0: ComponentEvent?) {}
+            })
         }
     }
 
