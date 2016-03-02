@@ -11020,7 +11020,7 @@ public inline fun CharArray.partition(predicate: (Char) -> Boolean): Pair<List<C
  */
 public fun <T> Array<out T>.window(size: Int, step: Int = size.coerceAtLeast(1), dropTrailing: Boolean = false): Sequence<Array<out T>> {
     require(step > 0) { "step should be positive but it is $step" }
-    return windowImpl(this.size, size, step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
+    return windowIndices(this.size, size, step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
 }
 
 /**
@@ -11045,7 +11045,7 @@ public fun <T> Array<out T>.window(size: Int, step: Int = size.coerceAtLeast(1),
  */
 public fun ByteArray.window(size: Int, step: Int = size.coerceAtLeast(1), dropTrailing: Boolean = false): Sequence<ByteArray> {
     require(step > 0) { "step should be positive but it is $step" }
-    return windowImpl(this.size, size, step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
+    return windowIndices(this.size, size, step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
 }
 
 /**
@@ -11070,7 +11070,7 @@ public fun ByteArray.window(size: Int, step: Int = size.coerceAtLeast(1), dropTr
  */
 public fun ShortArray.window(size: Int, step: Int = size.coerceAtLeast(1), dropTrailing: Boolean = false): Sequence<ShortArray> {
     require(step > 0) { "step should be positive but it is $step" }
-    return windowImpl(this.size, size, step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
+    return windowIndices(this.size, size, step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
 }
 
 /**
@@ -11095,7 +11095,7 @@ public fun ShortArray.window(size: Int, step: Int = size.coerceAtLeast(1), dropT
  */
 public fun IntArray.window(size: Int, step: Int = size.coerceAtLeast(1), dropTrailing: Boolean = false): Sequence<IntArray> {
     require(step > 0) { "step should be positive but it is $step" }
-    return windowImpl(this.size, size, step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
+    return windowIndices(this.size, size, step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
 }
 
 /**
@@ -11120,7 +11120,7 @@ public fun IntArray.window(size: Int, step: Int = size.coerceAtLeast(1), dropTra
  */
 public fun LongArray.window(size: Int, step: Int = size.coerceAtLeast(1), dropTrailing: Boolean = false): Sequence<LongArray> {
     require(step > 0) { "step should be positive but it is $step" }
-    return windowImpl(this.size, size, step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
+    return windowIndices(this.size, size, step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
 }
 
 /**
@@ -11145,7 +11145,7 @@ public fun LongArray.window(size: Int, step: Int = size.coerceAtLeast(1), dropTr
  */
 public fun FloatArray.window(size: Int, step: Int = size.coerceAtLeast(1), dropTrailing: Boolean = false): Sequence<FloatArray> {
     require(step > 0) { "step should be positive but it is $step" }
-    return windowImpl(this.size, size, step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
+    return windowIndices(this.size, size, step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
 }
 
 /**
@@ -11170,7 +11170,7 @@ public fun FloatArray.window(size: Int, step: Int = size.coerceAtLeast(1), dropT
  */
 public fun DoubleArray.window(size: Int, step: Int = size.coerceAtLeast(1), dropTrailing: Boolean = false): Sequence<DoubleArray> {
     require(step > 0) { "step should be positive but it is $step" }
-    return windowImpl(this.size, size, step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
+    return windowIndices(this.size, size, step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
 }
 
 /**
@@ -11195,7 +11195,7 @@ public fun DoubleArray.window(size: Int, step: Int = size.coerceAtLeast(1), drop
  */
 public fun BooleanArray.window(size: Int, step: Int = size.coerceAtLeast(1), dropTrailing: Boolean = false): Sequence<BooleanArray> {
     require(step > 0) { "step should be positive but it is $step" }
-    return windowImpl(this.size, size, step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
+    return windowIndices(this.size, size, step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
 }
 
 /**
@@ -11220,7 +11220,7 @@ public fun BooleanArray.window(size: Int, step: Int = size.coerceAtLeast(1), dro
  */
 public fun CharArray.window(size: Int, step: Int = size.coerceAtLeast(1), dropTrailing: Boolean = false): Sequence<CharArray> {
     require(step > 0) { "step should be positive but it is $step" }
-    return windowImpl(this.size, size, step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
+    return windowIndices(this.size, size, step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
 }
 
 /**
@@ -11245,7 +11245,7 @@ public fun CharArray.window(size: Int, step: Int = size.coerceAtLeast(1), dropTr
  */
 public fun <T> Array<out T>.windowBackward(size: Int, step: Int = size.coerceAtLeast(1), dropTrailing: Boolean = false): Sequence<Array<out T>> {
     require(step > 0) { "step should be positive but it is $step" }
-    return windowImpl(this.size, size, -step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
+    return windowIndices(this.size, size, -step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
 }
 
 /**
@@ -11270,7 +11270,7 @@ public fun <T> Array<out T>.windowBackward(size: Int, step: Int = size.coerceAtL
  */
 public fun ByteArray.windowBackward(size: Int, step: Int = size.coerceAtLeast(1), dropTrailing: Boolean = false): Sequence<ByteArray> {
     require(step > 0) { "step should be positive but it is $step" }
-    return windowImpl(this.size, size, -step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
+    return windowIndices(this.size, size, -step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
 }
 
 /**
@@ -11295,7 +11295,7 @@ public fun ByteArray.windowBackward(size: Int, step: Int = size.coerceAtLeast(1)
  */
 public fun ShortArray.windowBackward(size: Int, step: Int = size.coerceAtLeast(1), dropTrailing: Boolean = false): Sequence<ShortArray> {
     require(step > 0) { "step should be positive but it is $step" }
-    return windowImpl(this.size, size, -step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
+    return windowIndices(this.size, size, -step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
 }
 
 /**
@@ -11320,7 +11320,7 @@ public fun ShortArray.windowBackward(size: Int, step: Int = size.coerceAtLeast(1
  */
 public fun IntArray.windowBackward(size: Int, step: Int = size.coerceAtLeast(1), dropTrailing: Boolean = false): Sequence<IntArray> {
     require(step > 0) { "step should be positive but it is $step" }
-    return windowImpl(this.size, size, -step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
+    return windowIndices(this.size, size, -step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
 }
 
 /**
@@ -11345,7 +11345,7 @@ public fun IntArray.windowBackward(size: Int, step: Int = size.coerceAtLeast(1),
  */
 public fun LongArray.windowBackward(size: Int, step: Int = size.coerceAtLeast(1), dropTrailing: Boolean = false): Sequence<LongArray> {
     require(step > 0) { "step should be positive but it is $step" }
-    return windowImpl(this.size, size, -step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
+    return windowIndices(this.size, size, -step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
 }
 
 /**
@@ -11370,7 +11370,7 @@ public fun LongArray.windowBackward(size: Int, step: Int = size.coerceAtLeast(1)
  */
 public fun FloatArray.windowBackward(size: Int, step: Int = size.coerceAtLeast(1), dropTrailing: Boolean = false): Sequence<FloatArray> {
     require(step > 0) { "step should be positive but it is $step" }
-    return windowImpl(this.size, size, -step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
+    return windowIndices(this.size, size, -step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
 }
 
 /**
@@ -11395,7 +11395,7 @@ public fun FloatArray.windowBackward(size: Int, step: Int = size.coerceAtLeast(1
  */
 public fun DoubleArray.windowBackward(size: Int, step: Int = size.coerceAtLeast(1), dropTrailing: Boolean = false): Sequence<DoubleArray> {
     require(step > 0) { "step should be positive but it is $step" }
-    return windowImpl(this.size, size, -step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
+    return windowIndices(this.size, size, -step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
 }
 
 /**
@@ -11420,7 +11420,7 @@ public fun DoubleArray.windowBackward(size: Int, step: Int = size.coerceAtLeast(
  */
 public fun BooleanArray.windowBackward(size: Int, step: Int = size.coerceAtLeast(1), dropTrailing: Boolean = false): Sequence<BooleanArray> {
     require(step > 0) { "step should be positive but it is $step" }
-    return windowImpl(this.size, size, -step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
+    return windowIndices(this.size, size, -step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
 }
 
 /**
@@ -11445,7 +11445,7 @@ public fun BooleanArray.windowBackward(size: Int, step: Int = size.coerceAtLeast
  */
 public fun CharArray.windowBackward(size: Int, step: Int = size.coerceAtLeast(1), dropTrailing: Boolean = false): Sequence<CharArray> {
     require(step > 0) { "step should be positive but it is $step" }
-    return windowImpl(this.size, size, -step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
+    return windowIndices(this.size, size, -step, dropTrailing).map { copyOfRange(it.start, it.endInclusive + 1) }
 }
 
 /**
