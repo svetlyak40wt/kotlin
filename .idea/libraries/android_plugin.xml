@@ -6,12 +6,16 @@
     <CLASSES>
       <root url="file://$PROJECT_DIR$/ideaSDK/plugins/android/lib" />
       <root url="file://$PROJECT_DIR$/ideaSDK/plugins/android/lib/jps" />
+      <root url="file://$PROJECT_DIR$/android-studio/sdk/plugins/android/lib" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
       <root url="jar://$PROJECT_DIR$/ideaSDK/sources/sources.jar!/" />
+      <root url="file://$PROJECT_DIR$/android-studio/sdk/plugins/android/lib" />
     </SOURCES>
+    <jarDirectory url="file://$PROJECT_DIR$/android-studio/sdk/plugins/android/lib" recursive="false" />
     <jarDirectory url="file://$PROJECT_DIR$/ideaSDK/plugins/android/lib" recursive="false" />
     <jarDirectory url="file://$PROJECT_DIR$/ideaSDK/plugins/android/lib/jps" recursive="false" />
+    <jarDirectory url="file://$PROJECT_DIR$/android-studio/sdk/plugins/android/lib" recursive="false" type="SOURCES" />
   </library>
 </component>
