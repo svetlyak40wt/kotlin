@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2015 JetBrains s.r.o.
+ * Copyright 2010-2016 JetBrains s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package org.jetbrains.kotlin.js.translate.expression
 
 import com.google.dart.compiler.backend.js.ast.*
+import com.google.dart.compiler.backend.js.ast.metadata.descriptor
 import com.google.dart.compiler.backend.js.ast.metadata.isLocal
 import com.google.dart.compiler.backend.js.ast.metadata.staticRef
 import org.jetbrains.kotlin.descriptors.*
@@ -39,6 +40,7 @@ class LiteralFunctionTranslator(context: TranslationContext) : AbstractTranslato
         val descriptor = getFunctionDescriptor(invokingContext.bindingContext(), declaration)
 
         val lambda = invokingContext.getFunctionObject(descriptor)
+        lambda.descriptor = descriptor
         val functionContext = invokingContext.newFunctionBodyWithUsageTracker(lambda, descriptor)
 
         FunctionTranslator.addParameters(lambda.parameters, descriptor, functionContext)

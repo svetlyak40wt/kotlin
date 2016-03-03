@@ -156,7 +156,7 @@ public final class ExpressionVisitor extends TranslatorVisitor<JsNode> {
     }
 
     @NotNull
-    private JsNode markReturnIfNeed(
+    private static JsNode markReturnIfNeed(
             @Nullable JsExpression jsResult,
             @NotNull KtReturnExpression returnExpression,
             @NotNull TranslationContext context
@@ -164,51 +164,43 @@ public final class ExpressionVisitor extends TranslatorVisitor<JsNode> {
         JsReturn result = new JsReturn(jsResult);
         DeclarationDescriptor descriptor = context.getDeclarationDescriptor();
         if (descriptor instanceof CallableMemberDescriptor) {
-            MetadataProperties.setNonLocal(result, isNonLocalReturn((CallableMemberDescriptor) descriptor, returnExpression, context));
+            MetadataProperties.setTarget(result, getNonLocalReturnTarget((CallableMemberDescriptor) descriptor, returnExpression, context));
         }
         return result.source(returnExpression);
     }
 
-    private boolean isNonLocalReturn(
+    @Nullable
+    private static FunctionDescriptor getNonLocalReturnTarget(
             @NotNull CallableMemberDescriptor descriptor,
             @NotNull KtReturnExpression expression,
             @NotNull TranslationContext context
     ) {
-        //call inside lambda
-        if (isFunctionLiteral(descriptor) || isFunctionExpression(descriptor)) {
-            if (expression.getLabelName() == null) {
-                if (isFunctionLiteral(descriptor)) {
-                    //non labeled return couldn't be local in lambda
-                    //FunctionDescriptor containingFunction =
-                    //        BindingContextUtils.getContainingFunctionSkipFunctionLiterals(descriptor, true).getFirst();
-                    //FIRST_FUN_LABEL to prevent clashing with existing labels
-                    //return new NonLocalReturnInfo(typeMapper.mapReturnType(containingFunction), InlineCodegenUtil.FIRST_FUN_LABEL);
-                    return true;
-                } else {
-                    //local
-                    return false;
-                }
-            }
+        // call not inside lambda
+        if (!isFunctionLiteral(descriptor) && !isFunctionExpression(descriptor)) return null;
 
-            DeclarationDescriptor containingFunction = InlineUtil.getContainingClassOrFunctionDescriptor(descriptor, false);
-            //FunctionDescriptor containingFunction = BindingContextUtils.getContainingFunctionSkipFunctionLiterals(descriptor, true).getFirst();
-
-            PsiElement element = context.bindingContext().get(LABEL_TARGET, expression.getTargetLabel());
-            DeclarationDescriptor elementDescriptor = context.bindingContext().get(DECLARATION_TO_DESCRIPTOR, element);
-
-            //if (elementDescriptor == containingFunction) {
-            if (elementDescriptor != containingFunction) {
-                //DeclarationDescriptor elementDescriptor = context.bindingContext().get(DECLARATION_TO_DESCRIPTOR, element);
-                //assert element != null : "Expression should be not null " + expression.getText();
-                //assert elementDescriptor != null : "Descriptor should be not null: " + element.getText();
-                //return new NonLocalReturnInfo(typeMapper.mapReturnType((CallableDescriptor) elementDescriptor), expression.getLabelName());
-                return true;
-            }
-            else {
-                return false;
+        if (expression.getLabelName() == null) {
+            if (isFunctionLiteral(descriptor)) {
+                // non labeled return couldn't be local in lambda
+                return BindingContextUtils.getContainingFunctionSkipFunctionLiterals(descriptor, true).getFirst();
+            } else {
+                // local
+                return null;
             }
         }
-        return false;
+
+        DeclarationDescriptor containingFunction = InlineUtil.getContainingClassOrFunctionDescriptor(descriptor, false);
+
+        PsiElement targetElement = context.bindingContext().get(LABEL_TARGET, expression.getTargetLabel());
+        DeclarationDescriptor targetDescriptor = context.bindingContext().get(DECLARATION_TO_DESCRIPTOR, targetElement);
+
+        if (targetDescriptor != containingFunction) {
+            // non-local
+            return (FunctionDescriptor) targetDescriptor;
+        }
+        else {
+            // local
+            return null;
+        }
     }
 
 

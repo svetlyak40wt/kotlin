@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 @file:JvmName("MetadataProperties")
 
 package com.google.dart.compiler.backend.js.ast.metadata
@@ -20,6 +21,7 @@ package com.google.dart.compiler.backend.js.ast.metadata
 import com.google.dart.compiler.backend.js.ast.*
 import com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.descriptors.CallableDescriptor
+import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.resolve.inline.InlineStrategy
 
 var JsName.staticRef: JsNode? by MetadataProperty(default = null)
@@ -33,11 +35,13 @@ var JsInvocation.psiElement: PsiElement? by MetadataProperty(default = null)
 
 var JsFunction.isLocal: Boolean by MetadataProperty(default = false)
 
+var JsFunction.descriptor: FunctionDescriptor? by MetadataProperty(default = null)
+
 var JsParameter.hasDefaultValue: Boolean by MetadataProperty(default = false)
 
 var JsInvocation.typeCheck: TypeCheck? by MetadataProperty(default = null)
 
-var JsReturn.isNonLocal: Boolean by MetadataProperty(default = false)
+var JsReturn.target: FunctionDescriptor? by MetadataProperty(default = null)
 
 enum class TypeCheck {
     TYPEOF,

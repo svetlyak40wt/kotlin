@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2015 JetBrains s.r.o.
+ * Copyright 2010-2016 JetBrains s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,6 +65,7 @@ public final class FunctionTranslator extends AbstractTranslator {
         this.descriptor = getFunctionDescriptor(context.bindingContext(), functionDeclaration);
         this.functionDeclaration = functionDeclaration;
         this.functionObject = context().getFunctionObject(descriptor);
+        MetadataProperties.setDescriptor(this.functionObject, descriptor);
         assert this.functionObject.getParameters().isEmpty()
                 : message(descriptor, "Function " + functionDeclaration.getText() + " processed for the second time.");
         //NOTE: it's important we compute the context before we start the computation

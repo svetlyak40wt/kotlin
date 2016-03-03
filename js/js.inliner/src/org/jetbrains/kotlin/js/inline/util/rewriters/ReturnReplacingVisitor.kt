@@ -17,11 +17,12 @@
 package org.jetbrains.kotlin.js.inline.util.rewriters
 
 import com.google.dart.compiler.backend.js.ast.*
-import com.google.dart.compiler.backend.js.ast.metadata.isNonLocal
+import com.google.dart.compiler.backend.js.ast.metadata.descriptor
+import com.google.dart.compiler.backend.js.ast.metadata.target
 import org.jetbrains.kotlin.js.inline.util.canHaveSideEffect
 import org.jetbrains.kotlin.js.translate.utils.JsAstUtils
 
-class ReturnReplacingVisitor(private val resultRef: JsNameRef?, private val breakLabel: JsNameRef?) : JsVisitorWithContextImpl() {
+class ReturnReplacingVisitor(private val resultRef: JsNameRef?, private val breakLabel: JsNameRef?, private val function: JsFunction) : JsVisitorWithContextImpl() {
 
     /**
      * Prevents replacing returns in object literal
@@ -34,7 +35,7 @@ class ReturnReplacingVisitor(private val resultRef: JsNameRef?, private val brea
     override fun visit(x: JsFunction, ctx: JsContext<JsNode>): Boolean = false
 
     override fun endVisit(x: JsReturn, ctx: JsContext<JsNode>) {
-        if (x.isNonLocal) return
+        if (x.target != null && function.descriptor != x.target) return
 
         ctx.removeMe()
 

@@ -17,7 +17,8 @@
 package org.jetbrains.kotlin.js.inline
 
 import com.google.dart.compiler.backend.js.ast.*
-import com.google.dart.compiler.backend.js.ast.metadata.isNonLocal
+import com.google.dart.compiler.backend.js.ast.metadata.descriptor
+import com.google.dart.compiler.backend.js.ast.metadata.target
 import org.jetbrains.kotlin.js.inline.clean.removeDefaultInitializers
 import org.jetbrains.kotlin.js.inline.context.InliningContext
 import org.jetbrains.kotlin.js.inline.context.NamingContext
@@ -100,7 +101,7 @@ private constructor(
         }
 
         val collectInstances = collectInstances(JsReturn::class.java, body)
-        val hasNonLocals = collectInstances.any { it.isNonLocal }
+        val hasNonLocals = collectInstances.any { it.target != null && invokedFunction.descriptor != it.target }
 
         val returnCount = collectInstances.size
         if (!hasNonLocals && returnCount == 0) {
@@ -133,7 +134,7 @@ private constructor(
         val breakName = namingContext.getFreshName(getBreakLabel())
         breakLabel = JsLabel(breakName)
 
-        val visitor = ReturnReplacingVisitor(resultExpr as? JsNameRef, breakName.makeRef())
+        val visitor = ReturnReplacingVisitor(resultExpr as? JsNameRef, breakName.makeRef(), invokedFunction)
         visitor.accept(body)
 
         val statements = body.statements
