@@ -52,8 +52,8 @@ import org.jetbrains.kotlin.idea.framework.getReflectJar
 import org.jetbrains.kotlin.idea.framework.getRuntimeJar
 import org.jetbrains.kotlin.idea.framework.getTestJar
 import org.jetbrains.kotlin.serialization.deserialization.BinaryVersion
+import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
-import java.awt.event.ComponentListener
 import java.text.MessageFormat
 import java.util.*
 import javax.swing.Icon
@@ -302,20 +302,16 @@ class UnsupportedAbiVersionNotificationPanelProvider(private val project: Projec
             val successLink = createActionLabel(successLinkText, {  })
             successLink.isVisible = false
 
-            myLinksPanel.addComponentListener(object : ComponentListener {
-                var isFirstResize = true
-                override fun componentMoved(p0: ComponentEvent?) {}
-
+            // Several notification panels can be created almost instantly but we want to postpone deferred checks until
+            // panels are actually visible on screen.
+            myLinksPanel.addComponentListener(object : ComponentAdapter() {
+                var isUpdaterCalled = false
                 override fun componentResized(p0: ComponentEvent?) {
-                    if (isFirstResize) {
-                        isFirstResize = false
+                    if (!isUpdaterCalled) {
+                        isUpdaterCalled = true
                         updater(label, successLink)
                     }
                 }
-
-                override fun componentHidden(p0: ComponentEvent?) {}
-
-                override fun componentShown(p0: ComponentEvent?) {}
             })
         }
     }

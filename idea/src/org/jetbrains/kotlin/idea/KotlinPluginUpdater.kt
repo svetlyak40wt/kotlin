@@ -48,7 +48,7 @@ import java.net.URLEncoder
 import java.util.concurrent.TimeUnit
 
 sealed class PluginUpdateStatus {
-    val update = System.currentTimeMillis()
+    val timestamp = System.currentTimeMillis()
 
     object LatestVersionInstalled : PluginUpdateStatus()
 
@@ -120,7 +120,7 @@ class KotlinPluginUpdater(val propertiesComponent: PropertiesComponent) : Dispos
     fun runCachedUpdate(callback: (PluginUpdateStatus) -> Boolean) {
         ApplicationManager.getApplication().assertIsDispatchThread()
         val cachedStatus = lastUpdateStatus
-        if (cachedStatus != null && System.currentTimeMillis() - cachedStatus.update < CACHED_REQUEST_DELAY) {
+        if (cachedStatus != null && System.currentTimeMillis() - cachedStatus.timestamp < CACHED_REQUEST_DELAY) {
             if (cachedStatus !is PluginUpdateStatus.CheckFailed) {
                 callback(cachedStatus)
                 return
