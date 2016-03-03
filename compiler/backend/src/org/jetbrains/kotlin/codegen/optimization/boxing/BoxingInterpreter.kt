@@ -21,6 +21,7 @@ import org.jetbrains.kotlin.codegen.AsmUtil
 import org.jetbrains.kotlin.codegen.RangeCodegenUtil
 import org.jetbrains.kotlin.codegen.optimization.common.OptimizationBasicInterpreter
 import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.resolve.jvm.AsmTypes
 import org.jetbrains.kotlin.resolve.jvm.JvmPrimitiveType
 import org.jetbrains.org.objectweb.asm.Opcodes
 import org.jetbrains.org.objectweb.asm.Type
@@ -120,6 +121,9 @@ open class BoxingInterpreter(private val insnList: InsnList) : OptimizationBasic
         private val UNBOXING_METHOD_NAMES =
                 ImmutableSet.of("booleanValue", "charValue", "byteValue", "shortValue", "intValue", "floatValue", "longValue", "doubleValue")
 
+        private val KCLASS_TO_JLCLASS = Type.getMethodDescriptor(AsmTypes.JAVA_CLASS_TYPE, AsmTypes.K_CLASS_TYPE)
+        private val JLCLASS_TO_KCLASS = Type.getMethodDescriptor(AsmTypes.K_CLASS_TYPE, AsmTypes.JAVA_CLASS_TYPE)
+
         private fun isWrapperClassNameOrNumber(internalClassName: String) =
                 isWrapperClassName(internalClassName) || internalClassName == Type.getInternalName(Number::class.java)
 
@@ -130,22 +134,43 @@ open class BoxingInterpreter(private val insnList: InsnList) : OptimizationBasic
                 FqName(Type.getObjectType(internalClassName).className)
 
         private fun isUnboxing(insn: AbstractInsnNode) =
-                insn.opcode == Opcodes.INVOKEVIRTUAL && run {
-                    val methodInsn = insn as MethodInsnNode
-                    isWrapperClassNameOrNumber(methodInsn.owner) && isUnboxingMethodName(methodInsn.name)
-                }
+                isPrimitiveUnboxing(insn) || isJavaLangClassUnboxing(insn)
+
+        private inline fun <R : Any> AbstractInsnNode.withMethodInsn(opcode: Int, body: MethodInsnNode.() -> R): R? =
+                if (this.opcode == opcode) (this as MethodInsnNode).body() else null
+
+        private fun isPrimitiveUnboxing(insn: AbstractInsnNode) =
+                insn.withMethodInsn(Opcodes.INVOKEVIRTUAL) {
+                    isWrapperClassNameOrNumber(owner) && isUnboxingMethodName(name)
+                } ?: false
+
+        private fun isJavaLangClassUnboxing(insn: AbstractInsnNode) =
+                insn.withMethodInsn(Opcodes.INVOKESTATIC) {
+                    owner == "kotlin/jvm/JvmClassMappingKt" &&
+                    name == "getJavaClass" &&
+                    desc == KCLASS_TO_JLCLASS
+                } ?: false
 
         private fun isUnboxingMethodName(name: String) =
                 UNBOXING_METHOD_NAMES.contains(name)
 
         private fun isBoxing(insn: AbstractInsnNode) =
-                insn.opcode == Opcodes.INVOKESTATIC && run {
-                    val methodInsn = insn as MethodInsnNode
-                    isWrapperClassName(methodInsn.owner) && methodInsn.name == "valueOf" && run {
-                        val ownerType = Type.getObjectType(methodInsn.owner)
-                        methodInsn.desc == Type.getMethodDescriptor(ownerType, AsmUtil.unboxType(ownerType))
+                isPrimitiveBoxing(insn) || isJavaLangClassBoxing(insn)
+
+        private fun isPrimitiveBoxing(insn: AbstractInsnNode) =
+                insn.withMethodInsn(Opcodes.INVOKESTATIC) {
+                    isWrapperClassName(owner) && name == "valueOf" && run {
+                        val ownerType = Type.getObjectType(owner)
+                        desc == Type.getMethodDescriptor(ownerType, AsmUtil.unboxType(ownerType))
                     }
-                }
+                } ?: false
+
+        private fun isJavaLangClassBoxing(insn: AbstractInsnNode) =
+                insn.withMethodInsn(Opcodes.INVOKESTATIC) {
+                    owner == AsmTypes.REFLECTION &&
+                    name == "getOrCreateKotlinClass" &&
+                    desc == JLCLASS_TO_KCLASS
+                } ?: false
 
         private fun isNextMethodCallOfProgressionIterator(insn: AbstractInsnNode, values: kotlin.collections.List<BasicValue>) =
                 insn.opcode == Opcodes.INVOKEINTERFACE &&
