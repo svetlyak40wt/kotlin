@@ -7733,6 +7733,21 @@ public class QuickFixTestGenerated extends AbstractQuickFixTest {
                 String fileName = KotlinTestUtils.navigationMetadata("idea/testData/quickfix/variables/changeMutability/valWithSetter.kt");
                 doTest(fileName);
             }
+
+            @TestMetadata("idea/testData/quickfix/variables/changeMutability/canBeVal")
+            @TestDataPath("$PROJECT_ROOT")
+            @RunWith(JUnit3RunnerWithInners.class)
+            public static class CanBeVal extends AbstractQuickFixTest {
+                public void testAllFilesPresentInCanBeVal() throws Exception {
+                    KotlinTestUtils.assertAllTestsPresentByMetadata(this.getClass(), new File("idea/testData/quickfix/variables/changeMutability/canBeVal"), Pattern.compile("^([\\w\\-_]+)\\.kt$"), true);
+                }
+
+                @TestMetadata("canBeVal.kt")
+                public void testCanBeVal() throws Exception {
+                    String fileName = KotlinTestUtils.navigationMetadata("idea/testData/quickfix/variables/changeMutability/canBeVal/canBeVal.kt");
+                    doTest(fileName);
+                }
+            }
         }
 
         @TestMetadata("idea/testData/quickfix/variables/changeToFunctionInvocation")

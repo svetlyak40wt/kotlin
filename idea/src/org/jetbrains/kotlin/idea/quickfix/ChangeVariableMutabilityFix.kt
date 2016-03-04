@@ -24,23 +24,17 @@ import org.jetbrains.kotlin.diagnostics.Diagnostic
 import org.jetbrains.kotlin.diagnostics.Errors
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.*
-import org.jetbrains.kotlin.psi.psiUtil.getStrictParentOfType
 import org.jetbrains.kotlin.resolve.DescriptorToSourceUtils
 
-class ChangeVariableMutabilityFix(element: KtNamedDeclaration, private val makeVar: Boolean) : KotlinQuickFixAction<KtNamedDeclaration>(element) {
+class ChangeVariableMutabilityFix(element: KtValVarKeywordOwner, private val makeVar: Boolean) : KotlinQuickFixAction<KtValVarKeywordOwner>(element) {
 
     override fun getText() = if (makeVar) "Make variable mutable" else "Make variable immutable"
 
     override fun getFamilyName(): String = text
 
     override fun isAvailable(project: Project, editor: Editor?, file: PsiFile): Boolean {
-        return when (element) {
-            is KtProperty -> element.isVar != makeVar
-            is KtParameter ->
-                element.getStrictParentOfType<KtPrimaryConstructor>()?.valueParameterList == element.parent
-                && (element.valOrVarKeyword == KtTokens.VAR_KEYWORD) != makeVar
-            else -> false
-        }
+        val valOrVar = element.valOrVarKeyword?.node?.elementType ?: return false
+        return (valOrVar == KtTokens.VAR_KEYWORD) != makeVar
     }
 
     override fun invoke(project: Project, editor: Editor?, file: KtFile) {
@@ -63,7 +57,7 @@ class ChangeVariableMutabilityFix(element: KtNamedDeclaration, private val makeV
         val VAL_REASSIGNMENT_FACTORY: KotlinSingleIntentionActionFactory = object: KotlinSingleIntentionActionFactory() {
             override fun createAction(diagnostic: Diagnostic): IntentionAction? {
                 val propertyDescriptor = Errors.VAL_REASSIGNMENT.cast(diagnostic).a
-                val declaration = DescriptorToSourceUtils.descriptorToDeclaration(propertyDescriptor) as? KtNamedDeclaration ?: return null
+                val declaration = DescriptorToSourceUtils.descriptorToDeclaration(propertyDescriptor) as? KtValVarKeywordOwner ?: return null
                 return ChangeVariableMutabilityFix(declaration, true)
             }
         }
@@ -72,7 +66,7 @@ class ChangeVariableMutabilityFix(element: KtNamedDeclaration, private val makeV
             override fun createAction(diagnostic: Diagnostic): IntentionAction? {
                 val element = diagnostic.psiElement
                 return when (element) {
-                    is KtProperty, is KtParameter -> ChangeVariableMutabilityFix(element as KtNamedDeclaration, true)
+                    is KtProperty, is KtParameter -> ChangeVariableMutabilityFix(element as KtValVarKeywordOwner, true)
                     else -> null
                 }
             }
