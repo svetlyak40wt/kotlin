@@ -17,6 +17,7 @@
 package org.jetbrains.kotlin.js.translate.context;
 
 import com.google.dart.compiler.backend.js.ast.*;
+import com.google.protobuf.Descriptors;
 import com.intellij.psi.PsiElement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -439,9 +440,17 @@ public class TranslationContext {
         if (declarationDescriptor == null) return false;
 
         if (DescriptorUtils.isDescriptorWithLocalVisibility(declarationDescriptor)) {
-            return !(declarationDescriptor instanceof FunctionDescriptor);
+            if (declarationDescriptor instanceof FunctionDescriptor) {
+                return false;
+            }
         }
-        return true;
+
+        DeclarationDescriptor classDescriptor = declarationDescriptor;
+        if (!(classDescriptor instanceof ClassDescriptor)) {
+            classDescriptor = DescriptorUtils.getContainingClass(classDescriptor);
+        }
+
+        return classDescriptor != null && !DescriptorUtils.isObject(classDescriptor) && !DescriptorUtils.isAnonymousObject(classDescriptor);
     }
 
     @Nullable
@@ -478,10 +487,5 @@ public class TranslationContext {
         if (alias != null) return alias;
         if (descriptor instanceof ReceiverParameterDescriptor) return JsLiteral.THIS;
         return getNameForDescriptor(descriptor).makeRef();
-    }
-
-    @NotNull
-    public JsScope getRootScope() {
-        return staticContext.getRootScope();
     }
 }

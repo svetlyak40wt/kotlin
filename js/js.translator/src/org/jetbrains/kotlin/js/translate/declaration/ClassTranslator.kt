@@ -28,6 +28,7 @@ import org.jetbrains.kotlin.js.translate.callTranslator.CallTranslator
 import org.jetbrains.kotlin.js.translate.context.*
 import org.jetbrains.kotlin.js.translate.declaration.propertyTranslator.translateAccessors
 import org.jetbrains.kotlin.js.translate.expression.FunctionTranslator
+import org.jetbrains.kotlin.js.translate.expression.withCapturedParameters
 import org.jetbrains.kotlin.js.translate.general.AbstractTranslator
 import org.jetbrains.kotlin.js.translate.initializer.ClassInitializerTranslator
 import org.jetbrains.kotlin.js.translate.reference.ReferenceTranslator.translateAsFQReference
@@ -44,6 +45,7 @@ import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtObjectDeclaration
 import org.jetbrains.kotlin.psi.KtSecondaryConstructor
 import org.jetbrains.kotlin.resolve.BindingContextUtils
+import org.jetbrains.kotlin.resolve.DescriptorUtils
 import org.jetbrains.kotlin.resolve.DescriptorUtils.*
 import org.jetbrains.kotlin.types.CommonSupertypes.topologicallySortSuperclassesAndRecordAllInstances
 import org.jetbrains.kotlin.types.KotlinType
@@ -62,7 +64,7 @@ class ClassTranslator private constructor(
     private val descriptor = getClassDescriptor(context.bindingContext(), classDeclaration)
 
     private fun translateObjectLiteralExpression(): JsExpression {
-        if (descriptor.containingDeclaration is PackageFragmentDescriptor) return translate(context())
+        getContainingClass(descriptor) ?: return translate(context())
 
         return translateObjectInsideClass(context())
     }
@@ -141,7 +143,8 @@ class ClassTranslator private constructor(
         }
 
         val tracker = context.usageTracker()
-        if (tracker != null && initializer != null && tracker.hasCapturedExceptContaining()) {
+        if (tracker != null && initializer != null && tracker.hasCapturedExceptContaining() &&
+            !DescriptorUtils.isAnonymousObject(descriptor) && descriptor.kind != ClassKind.OBJECT) {
             val captured = tracker.capturedDescriptorToJsName
             val keysAsList = captured.keys.toList()
             for ((i, key) in keysAsList.withIndex()) {
@@ -229,27 +232,12 @@ class ClassTranslator private constructor(
     }
 
     private fun translateObjectInsideClass(outerClassContext: TranslationContext): JsExpression {
-        val outerDeclaration = descriptor.containingDeclaration.containingDeclaration
-        val scope = if (outerDeclaration != null)
-            outerClassContext.getScopeForDescriptor(outerDeclaration)
-        else
-            outerClassContext.rootScope
+        val function = JsFunction(outerClassContext.scope(), JsBlock(), "initializer for " + descriptor.name.asString())
+        val funContext = outerClassContext.newFunctionBodyWithUsageTracker(function, descriptor)
 
-        val classContext = outerClassContext.innerWithUsageTracker(scope, descriptor)
+        function.body.statements.add(JsReturn(translate(funContext)))
 
-        var declarationArgs = getClassCreateInvocationArguments(classContext)
-        val jsClass = JsInvocation(context().namer().classCreationMethodReference(), declarationArgs)
-
-        val name = outerClassContext.getNameForDescriptor(descriptor)
-        val constructor = outerClassContext.define(name, jsClass)
-
-        val closure = outerClassContext.getLocalClassClosure(descriptor)
-        var closureArgs = emptyList<JsExpression>()
-        if (closure != null) {
-            closureArgs = closure.map { context().getParameterNameRefForInvocation(it) }.toList()
-        }
-
-        return JsNew(constructor, closureArgs)
+        return function.withCapturedParameters(funContext, outerClassContext, descriptor)
     }
 
     private fun generatedBridgeMethods(properties: MutableList<JsPropertyInitializer>) {
