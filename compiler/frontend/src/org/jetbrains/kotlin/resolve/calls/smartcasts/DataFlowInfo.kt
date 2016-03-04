@@ -70,9 +70,10 @@ interface DataFlowInfo {
     fun assign(a: DataFlowValue, b: DataFlowValue): DataFlowInfo
 
     /**
-     * Call this function when it's known than a == b
+     * Call this function when it's known than a == b.
+     * byIdentity should be true iff it's comparison by identity like a === b
      */
-    fun equate(a: DataFlowValue, b: DataFlowValue): DataFlowInfo
+    fun equate(a: DataFlowValue, b: DataFlowValue, byIdentity: Boolean): DataFlowInfo
 
     /**
      * Call this function when it's known than a != b

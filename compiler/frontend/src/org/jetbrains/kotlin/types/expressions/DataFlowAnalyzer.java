@@ -22,20 +22,25 @@ import com.intellij.psi.tree.IElementType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns;
+import org.jetbrains.kotlin.descriptors.CallableMemberDescriptor;
+import org.jetbrains.kotlin.descriptors.DeclarationDescriptor;
 import org.jetbrains.kotlin.diagnostics.DiagnosticUtilsKt;
 import org.jetbrains.kotlin.lexer.KtTokens;
 import org.jetbrains.kotlin.psi.*;
 import org.jetbrains.kotlin.resolve.BindingContext;
 import org.jetbrains.kotlin.resolve.BindingTrace;
+import org.jetbrains.kotlin.resolve.DescriptorUtils;
 import org.jetbrains.kotlin.resolve.calls.checkers.AdditionalTypeChecker;
 import org.jetbrains.kotlin.resolve.calls.context.ResolutionContext;
 import org.jetbrains.kotlin.resolve.calls.smartcasts.*;
 import org.jetbrains.kotlin.resolve.constants.*;
 import org.jetbrains.kotlin.resolve.constants.evaluate.ConstantExpressionEvaluator;
 import org.jetbrains.kotlin.types.KotlinType;
+import org.jetbrains.kotlin.types.TypeConstructor;
 import org.jetbrains.kotlin.types.TypeUtils;
 import org.jetbrains.kotlin.types.checker.KotlinTypeChecker;
 import org.jetbrains.kotlin.types.expressions.typeInfoFactory.TypeInfoFactoryKt;
+import org.jetbrains.kotlin.util.OperatorNameConventions;
 
 import java.util.Collection;
 
@@ -79,6 +84,32 @@ public class DataFlowAnalyzer {
                 if (conditionValue && !expression.isNegated() || !conditionValue && expression.isNegated()) {
                     result.set(context.trace.get(BindingContext.DATAFLOW_INFO_AFTER_CONDITION, expression));
                 }
+            }
+
+            private boolean typeHasOverriddenEquals(@NotNull KotlinType type) {
+                for (DeclarationDescriptor member : DescriptorUtils.getAllDescriptors(type.getMemberScope())) {
+                    if (member instanceof CallableMemberDescriptor) {
+                        CallableMemberDescriptor callableMember = (CallableMemberDescriptor) member;
+                        if (callableMember.getKind() != CallableMemberDescriptor.Kind.FAKE_OVERRIDE &&
+                            OperatorNameConventions.EQUALS.equals(callableMember.getName())) {
+                            return true;
+                        }
+                    }
+                }
+                for (KotlinType supertype : type.getConstructor().getSupertypes()) {
+                    if (KotlinBuiltIns.isAnyOrNullableAny(supertype)) continue;
+                    if (typeHasOverriddenEquals(supertype)) return true;
+                }
+                return false;
+            }
+
+            // Returns true if we can prove that 'type' has equals method from 'Any' base type
+            private boolean typeHasEqualsFromAny(@NotNull KotlinType type) {
+                TypeConstructor constructor = type.getConstructor();
+                // Subtypes can override equals for non-final types
+                if (!constructor.isFinal()) return false;
+                // check whether 'equals' is overriden
+                return !typeHasOverriddenEquals(type);
             }
 
             @Override
@@ -126,7 +157,9 @@ public class DataFlowAnalyzer {
                     }
                     if (equals != null) {
                         if (equals == conditionValue) { // this means: equals && conditionValue || !equals && !conditionValue
-                            result.set(context.dataFlowInfo.equate(leftValue, rightValue).and(expressionFlowInfo));
+                            boolean byIdentity = operationToken == KtTokens.EQEQEQ || operationToken == KtTokens.EXCLEQEQEQ ||
+                                                 typeHasEqualsFromAny(lhsType);
+                            result.set(context.dataFlowInfo.equate(leftValue, rightValue, byIdentity).and(expressionFlowInfo));
                         }
                         else {
                             result.set(context.dataFlowInfo.disequate(leftValue, rightValue).and(expressionFlowInfo));

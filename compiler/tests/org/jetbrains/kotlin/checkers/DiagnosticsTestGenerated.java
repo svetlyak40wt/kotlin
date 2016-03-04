@@ -16131,6 +16131,12 @@ public class DiagnosticsTestGenerated extends AbstractDiagnosticsTest {
                 doTest(fileName);
             }
 
+            @TestMetadata("fakeSmartCastOnEquality.kt")
+            public void testFakeSmartCastOnEquality() throws Exception {
+                String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/smartCasts/fakeSmartCastOnEquality.kt");
+                doTest(fileName);
+            }
+
             @TestMetadata("falseReceiverSmartCast.kt")
             public void testFalseReceiverSmartCast() throws Exception {
                 String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/smartCasts/falseReceiverSmartCast.kt");
