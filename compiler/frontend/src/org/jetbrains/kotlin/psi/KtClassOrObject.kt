@@ -63,20 +63,23 @@ abstract class KtClassOrObject :
 
     fun getBody(): KtClassBody? = getStubOrPsiChild(KtStubElementTypes.CLASS_BODY)
 
-    fun addDeclaration(declaration: KtDeclaration): KtDeclaration {
+    fun <T: KtDeclaration> addDeclaration(declaration: T): T {
         val body = getOrCreateBody()
         val anchor = PsiTreeUtil.skipSiblingsBackward(body.rBrace ?: body.getLastChild()!!, PsiWhiteSpace::class.java)
-        return body.addAfter(declaration, anchor) as KtDeclaration
+        @Suppress("UNCHECKED_CAST")
+        return body.addAfter(declaration, anchor) as T
     }
 
-    fun addDeclarationAfter(declaration: KtDeclaration, anchor: PsiElement?): KtDeclaration {
+    fun <T: KtDeclaration> addDeclarationAfter(declaration: T, anchor: PsiElement?): T {
         val anchorBefore = anchor ?: getDeclarations().lastOrNull() ?: return addDeclaration(declaration)
-        return getOrCreateBody().addAfter(declaration, anchorBefore) as KtDeclaration
+        @Suppress("UNCHECKED_CAST")
+        return getOrCreateBody().addAfter(declaration, anchorBefore) as T
     }
 
-    fun addDeclarationBefore(declaration: KtDeclaration, anchor: PsiElement?): KtDeclaration {
+    fun <T: KtDeclaration> addDeclarationBefore(declaration: T, anchor: PsiElement?): T {
         val anchorAfter = anchor ?: getDeclarations().firstOrNull() ?: return addDeclaration(declaration)
-        return getOrCreateBody().addBefore(declaration, anchorAfter) as KtDeclaration
+        @Suppress("UNCHECKED_CAST")
+        return getOrCreateBody().addBefore(declaration, anchorAfter) as T
     }
 
     fun isTopLevel(): Boolean = getStub()?.isTopLevel() ?: (getParent() is KtFile)
