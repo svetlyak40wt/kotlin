@@ -479,6 +479,20 @@ class KotlinJpsBuildTest : AbstractKotlinJpsBuildTestCase() {
         doTestWithRuntime()
     }
 
+    fun testUnexportedDependencySimple() {
+        initProject()
+        val result = makeAll()
+        result.assertFailed()
+        result.checkErrors()
+    }
+
+    fun testUnexportedDependencyDifferentNumberOfTypeArguments() {
+        initProject()
+        val result = makeAll()
+        result.assertFailed()
+        result.checkErrors()
+    }
+
     fun testCircularDependenciesNoKotlinFiles() {
         doTest()
     }

@@ -71,8 +71,12 @@ class TypeDeserializer(
 
     fun typeConstructor(proto: ProtoBuf.Type): TypeConstructor =
             when {
-                proto.hasClassName() ->
-                    classDescriptors(proto.className)?.typeConstructor
+                proto.hasClassName() -> {
+                    val classDescriptor =
+                            classDescriptors(proto.className)
+                            ?: c.components.notFoundClasses.get(proto, c.nameResolver, c.typeTable)
+                    classDescriptor.typeConstructor
+                }
                 proto.hasTypeParameter() ->
                     typeParameterTypeConstructor(proto.typeParameter)
                 proto.hasTypeParameterName() -> {

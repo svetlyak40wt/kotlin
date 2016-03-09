@@ -1,0 +1,1 @@
+Type mismatch: inferred type is A<String>.Inner<Int, Unit> but A<Int, String, Double>.Inner<B2> was expected at line 7, column 16

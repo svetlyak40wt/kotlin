@@ -1,0 +1,1 @@
+Type mismatch: inferred type is A but String was expected at line 10, column 21
