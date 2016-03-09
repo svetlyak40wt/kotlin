@@ -70,10 +70,10 @@ public abstract class SingleFileTranslationTest extends BasicTest {
             @NotNull String functionName,
             @NotNull Object expectedResult
     ) throws Exception {
-        String baseName = getBaseName(kotlinFilePaths.get(0));
-        generateJavaScriptFiles(kotlinFilePaths, baseName, MainCallParameters.noCall(), ecmaVersions);
+        String testName = getTestName(true);
+        generateJavaScriptFiles(kotlinFilePaths, testName, MainCallParameters.noCall(), ecmaVersions);
         RhinoFunctionResultChecker checker = new RhinoFunctionResultChecker(TEST_MODULE, packageName, functionName, expectedResult);
-        runRhinoTests(baseName, ecmaVersions, checker);
+        runRhinoTests(testName, ecmaVersions, checker);
     }
 
     private void checkFooBoxIsTrue(@NotNull String filename, @NotNull Iterable<EcmaVersion> ecmaVersions) throws Exception {
