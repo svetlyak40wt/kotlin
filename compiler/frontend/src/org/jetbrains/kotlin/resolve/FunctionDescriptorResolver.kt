@@ -222,7 +222,7 @@ class FunctionDescriptorResolver(
             if (functionTypeExpected()) KotlinBuiltIns.getReceiverType(this) else null
 
     private fun KotlinType.getValueParameters(owner: FunctionDescriptor): List<ValueParameterDescriptor>? =
-            if (functionTypeExpected()) KotlinBuiltIns.getValueParameters(owner, this) else null
+            if (functionTypeExpected()) KotlinBuiltIns.createValueParameters(owner, this) else null
 
     fun resolvePrimaryConstructorDescriptor(
             scope: LexicalScope,

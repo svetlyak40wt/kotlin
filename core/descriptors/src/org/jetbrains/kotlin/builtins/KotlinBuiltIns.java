@@ -16,6 +16,7 @@
 
 package org.jetbrains.kotlin.builtins;
 
+import kotlin.collections.CollectionsKt;
 import kotlin.collections.SetsKt;
 import kotlin.jvm.functions.Function1;
 import org.jetbrains.annotations.NotNull;
@@ -37,6 +38,7 @@ import org.jetbrains.kotlin.serialization.deserialization.AdditionalSupertypes;
 import org.jetbrains.kotlin.storage.LockBasedStorageManager;
 import org.jetbrains.kotlin.types.*;
 import org.jetbrains.kotlin.types.checker.KotlinTypeChecker;
+import org.jetbrains.kotlin.utils.DFS;
 
 import java.io.InputStream;
 import java.util.*;
@@ -895,27 +897,45 @@ public abstract class KotlinBuiltIns {
     // Functions
 
     public static boolean isFunctionOrExtensionFunctionType(@NotNull KotlinType type) {
-        return isFunctionType(type) || isExtensionFunctionType(type);
+        return getFunctionSupertype(type) != null;
     }
 
     public static boolean isFunctionType(@NotNull KotlinType type) {
-        if (isExactFunctionType(type)) return true;
-
-        for (KotlinType superType : type.getConstructor().getSupertypes()) {
-            if (isFunctionType(superType)) return true;
-        }
-
-        return false;
+        KotlinType functionSupertype = getFunctionSupertype(type);
+        return functionSupertype != null && !isTypeAnnotatedWithExtension(functionSupertype);
     }
 
     public static boolean isExtensionFunctionType(@NotNull KotlinType type) {
-        if (isExactExtensionFunctionType(type)) return true;
+        KotlinType functionSupertype = getFunctionSupertype(type);
+        return functionSupertype != null && isTypeAnnotatedWithExtension(functionSupertype);
+    }
 
-        for (KotlinType superType : type.getConstructor().getSupertypes()) {
-            if (isExtensionFunctionType(superType)) return true;
-        }
+    @Nullable
+    private static KotlinType getFunctionSupertype(@NotNull KotlinType type) {
+        if (isExactFunctionOrExtensionFunctionType(type)) return type;
 
-        return false;
+        return DFS.dfsFromNode(type, new DFS.Neighbors<KotlinType>() {
+            @NotNull
+            @Override
+            public Iterable<? extends KotlinType> getNeighbors(KotlinType current) {
+                return current.getConstructor().getSupertypes();
+            }
+        }, new DFS.VisitedWithSet<KotlinType>(), new DFS.AbstractNodeHandler<KotlinType, KotlinType>() {
+            private KotlinType functionSupertype;
+
+            @Override
+            public boolean beforeChildren(KotlinType current) {
+                if (isExactFunctionOrExtensionFunctionType(current)) {
+                    functionSupertype = current;
+                }
+                return functionSupertype == null;
+            }
+
+            @Override
+            public KotlinType result() {
+                return functionSupertype;
+            }
+        });
     }
 
     public static boolean isExactFunctionOrExtensionFunctionType(@NotNull KotlinType type) {
@@ -947,18 +967,24 @@ public abstract class KotlinBuiltIns {
 
     @Nullable
     public static KotlinType getReceiverType(@NotNull KotlinType type) {
-        assert isFunctionOrExtensionFunctionType(type) : type;
-        if (isExtensionFunctionType(type)) {
-            // TODO: this is incorrect when a class extends from an extension function and swaps type arguments
-            return type.getArguments().get(0).getType();
-        }
-        return null;
+        KotlinType functionType = getFunctionSupertype(type);
+        assert functionType != null : "Not a function subtype: " + type;
+        return isTypeAnnotatedWithExtension(functionType)
+               ? CollectionsKt.first(functionType.getArguments()).getType()
+               : null;
     }
 
     @NotNull
-    public static List<ValueParameterDescriptor> getValueParameters(@NotNull FunctionDescriptor functionDescriptor, @NotNull KotlinType type) {
-        assert isFunctionOrExtensionFunctionType(type);
-        List<TypeProjection> parameterTypes = getParameterTypeProjectionsFromFunctionType(type);
+    public static List<ValueParameterDescriptor> createValueParameters(
+            @NotNull FunctionDescriptor functionDescriptor, @NotNull KotlinType type
+    ) {
+        return createValueParameters(functionDescriptor, getParameterTypeProjectionsFromFunctionType(type));
+    }
+
+    @NotNull
+    public static List<ValueParameterDescriptor> createValueParameters(
+            @NotNull FunctionDescriptor functionDescriptor, @NotNull List<TypeProjection> parameterTypes
+    ) {
         List<ValueParameterDescriptor> valueParameters = new ArrayList<ValueParameterDescriptor>(parameterTypes.size());
         for (int i = 0; i < parameterTypes.size(); i++) {
             TypeProjection parameterType = parameterTypes.get(i);
@@ -977,19 +1003,19 @@ public abstract class KotlinBuiltIns {
 
     @NotNull
     public static KotlinType getReturnTypeFromFunctionType(@NotNull KotlinType type) {
-        assert isFunctionOrExtensionFunctionType(type);
-        List<TypeProjection> arguments = type.getArguments();
-        return arguments.get(arguments.size() - 1).getType();
+        KotlinType functionType = getFunctionSupertype(type);
+        assert functionType != null : "Not a function subtype: " + type;
+        return CollectionsKt.last(functionType.getArguments()).getType();
     }
 
     @NotNull
     public static List<TypeProjection> getParameterTypeProjectionsFromFunctionType(@NotNull KotlinType type) {
-        assert isFunctionOrExtensionFunctionType(type);
-        List<TypeProjection> arguments = type.getArguments();
-        int first = isExtensionFunctionType(type) ? 1 : 0;
+        KotlinType functionType = getFunctionSupertype(type);
+        assert functionType != null : "Not a function subtype: " + type;
+        List<TypeProjection> arguments = functionType.getArguments();
+        int first = isTypeAnnotatedWithExtension(functionType) ? 1 : 0;
         int last = arguments.size() - 2;
-        // TODO: fix bugs associated with this here and in neighboring methods, see KT-9820
-        assert first <= last + 1 : "Not an exact function type: " + type;
+        assert first <= last + 1 : "Not an exact function type: " + functionType + " (supertype of " + type + ")";
         List<TypeProjection> parameterTypes = new ArrayList<TypeProjection>(last - first + 1);
         for (int i = first; i <= last; i++) {
             parameterTypes.add(arguments.get(i));

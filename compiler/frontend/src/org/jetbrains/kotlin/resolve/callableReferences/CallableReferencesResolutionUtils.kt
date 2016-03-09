@@ -211,11 +211,9 @@ private fun bindFunctionReference(expression: KtCallableReferenceExpression, typ
     )
 
     functionDescriptor.initialize(
-            KotlinBuiltIns.getReceiverType(type),
-            null,
-            emptyList(),
-            KotlinBuiltIns.getValueParameters(functionDescriptor, type),
-            KotlinBuiltIns.getReturnTypeFromFunctionType(type),
+            null, null, emptyList(),
+            KotlinBuiltIns.createValueParameters(functionDescriptor, type.arguments.dropLast(1)),
+            type.arguments.last().type,
             Modality.FINAL,
             Visibilities.PUBLIC
     )
