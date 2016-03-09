@@ -19,27 +19,24 @@ package org.jetbrains.kotlin.types.expressions;
 import com.google.common.collect.Sets;
 import com.intellij.openapi.util.Ref;
 import com.intellij.psi.tree.IElementType;
-import kotlin.jvm.functions.Function1;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns;
 import org.jetbrains.kotlin.descriptors.CallableMemberDescriptor;
-import org.jetbrains.kotlin.descriptors.DeclarationDescriptor;
+import org.jetbrains.kotlin.descriptors.ClassifierDescriptor;
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor;
 import org.jetbrains.kotlin.diagnostics.DiagnosticUtilsKt;
 import org.jetbrains.kotlin.incremental.KotlinLookupLocation;
-import org.jetbrains.kotlin.incremental.components.NoLookupLocation;
 import org.jetbrains.kotlin.lexer.KtTokens;
-import org.jetbrains.kotlin.name.Name;
 import org.jetbrains.kotlin.psi.*;
 import org.jetbrains.kotlin.resolve.BindingContext;
 import org.jetbrains.kotlin.resolve.BindingTrace;
+import org.jetbrains.kotlin.resolve.DescriptorUtils;
 import org.jetbrains.kotlin.resolve.calls.checkers.AdditionalTypeChecker;
 import org.jetbrains.kotlin.resolve.calls.context.ResolutionContext;
 import org.jetbrains.kotlin.resolve.calls.smartcasts.*;
 import org.jetbrains.kotlin.resolve.constants.*;
 import org.jetbrains.kotlin.resolve.constants.evaluate.ConstantExpressionEvaluator;
-import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter;
 import org.jetbrains.kotlin.types.KotlinType;
 import org.jetbrains.kotlin.types.TypeConstructor;
 import org.jetbrains.kotlin.types.TypeUtils;
@@ -98,10 +95,11 @@ public class DataFlowAnalyzer {
                     if (member.getKind() != CallableMemberDescriptor.Kind.FAKE_OVERRIDE) {
                         return true;
                     }
-                }
-                for (KotlinType supertype : type.getConstructor().getSupertypes()) {
-                    if (KotlinBuiltIns.isAnyOrNullableAny(supertype)) continue;
-                    if (typeHasOverriddenEquals(supertype)) return true;
+                    else {
+                        FunctionDescriptor unwrapped = DescriptorUtils.unwrapFakeOverride(member);
+                        ClassifierDescriptor superClassDescriptor = (ClassifierDescriptor) unwrapped.getContainingDeclaration();
+                        if (!KotlinBuiltIns.isAnyOrNullableAny(superClassDescriptor.getDefaultType())) return true;
+                    }
                 }
                 return false;
             }
