@@ -45,17 +45,19 @@ class KotlinSpacingBuilder(val codeStyleSettings: CodeStyleSettings) {
 
     inner class BasicSpacingBuilder() : SpacingBuilder(codeStyleSettings, KotlinLanguage.INSTANCE), Builder {
         override fun getSpacing(parent: ASTBlock, left: ASTBlock, right: ASTBlock): Spacing? {
-            return super<SpacingBuilder>.getSpacing(parent, left, right)
+            return super.getSpacing(parent, left, right)
         }
     }
 
+    data class SpacingRule(val spacingFun: (ASTBlock, ASTBlock, ASTBlock) -> Spacing?, val debugName: String? = null)
+
     inner class CustomSpacingBuilder() : Builder {
-        private val rules = ArrayList<(ASTBlock, ASTBlock, ASTBlock) -> Spacing?>()
+        private val rules = ArrayList<SpacingRule>()
         private var conditions = ArrayList<(ASTBlock, ASTBlock, ASTBlock) -> Boolean>()
 
         override fun getSpacing(parent: ASTBlock, left: ASTBlock, right: ASTBlock): Spacing? {
             for (rule in rules) {
-                val spacing = rule(parent, left, right)
+                val spacing = rule.spacingFun(parent, left, right)
                 if (spacing != null) {
                     return spacing
                 }
@@ -77,8 +79,8 @@ class KotlinSpacingBuilder(val codeStyleSettings: CodeStyleSettings) {
             return this
         }
 
-        fun lineBreakIfLineBreakInParent(numSpacesOtherwise: Int, allowBlankLines: Boolean = true) {
-            newRule {
+        fun lineBreakIfLineBreakInParent(numSpacesOtherwise: Int, allowBlankLines: Boolean = true, debugName: String? = null) {
+            newRule(debugName) {
                 p, l, r ->
                 Spacing.createDependentLFSpacing(numSpacesOtherwise, numSpacesOtherwise, p.textRange,
                                                  codeStyleSettings.KEEP_LINE_BREAKS,
@@ -86,8 +88,8 @@ class KotlinSpacingBuilder(val codeStyleSettings: CodeStyleSettings) {
             }
         }
 
-        fun emptyLinesIfLineBreakInLeft(emptyLines: Int, numberOfLineFeedsOtherwise: Int = 1, numSpacesOtherwise: Int = 0) {
-            newRule { parent: ASTBlock, left: ASTBlock, right: ASTBlock ->
+        fun emptyLinesIfLineBreakInLeft(emptyLines: Int, numberOfLineFeedsOtherwise: Int = 1, numSpacesOtherwise: Int = 0, debugName: String? = null) {
+            newRule(debugName) { parent: ASTBlock, left: ASTBlock, right: ASTBlock ->
                 val dependentSpacingRule = DependentSpacingRule(Trigger.HAS_LINE_FEEDS).registerData(Anchor.MIN_LINE_FEEDS, emptyLines + 1)
                 LineFeedDependantSpacing(
                         numSpacesOtherwise, numSpacesOtherwise,
@@ -98,17 +100,17 @@ class KotlinSpacingBuilder(val codeStyleSettings: CodeStyleSettings) {
             }
         }
 
-        fun spacing(spacing: Spacing) {
-            newRule { parent, left, right -> spacing }
+        fun spacing(debugName: String? = null, spacing: Spacing) {
+            newRule(debugName) { parent, left, right -> spacing }
         }
 
-        fun customRule(block: (parent: ASTBlock, left: ASTBlock, right: ASTBlock) -> Spacing?) {
-            newRule(block)
+        fun customRule(debugName: String? = null, block: (parent: ASTBlock, left: ASTBlock, right: ASTBlock) -> Spacing?) {
+            newRule(debugName, block)
         }
 
-        private fun newRule(rule: (ASTBlock, ASTBlock, ASTBlock) -> Spacing?) {
+        private fun newRule(debugName: String? = null, rule: (ASTBlock, ASTBlock, ASTBlock) -> Spacing?) {
             val savedConditions = ArrayList(conditions)
-            rules.add { p, l, r -> if (savedConditions.all { it(p, l, r) }) rule(p, l, r) else null }
+            rules.add(SpacingRule({ p, l, r -> if (savedConditions.all { it(p, l, r) }) rule(p, l, r) else null }, debugName))
             conditions.clear()
         }
     }
