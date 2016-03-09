@@ -50,10 +50,21 @@ class KotlinSpacingBuilder(val codeStyleSettings: CodeStyleSettings) {
     }
 
     data class SpacingRule(val spacingFun: (ASTBlock, ASTBlock, ASTBlock) -> Spacing?, val debugName: String? = null)
+    data class SpacingCondition(val parent: IElementType? = null, val left: IElementType? = null, val right: IElementType? = null,
+                                val parentSet: TokenSet? = null, val leftSet: TokenSet? = null, val rightSet: TokenSet? = null) {
+        fun isApplicable(p: ASTBlock, l: ASTBlock, r: ASTBlock): Boolean {
+            return (parent == null || p.node!!.elementType == parent) &&
+                   (left == null || l.node!!.elementType == left) &&
+                   (right == null || r.node!!.elementType == right) &&
+                   (parentSet == null || parentSet.contains(p.node!!.elementType)) &&
+                   (leftSet == null || leftSet.contains(l.node!!.elementType)) &&
+                   (rightSet == null || rightSet.contains(r.node!!.elementType))
+        }
+    }
 
     inner class CustomSpacingBuilder() : Builder {
         private val rules = ArrayList<SpacingRule>()
-        private var conditions = ArrayList<(ASTBlock, ASTBlock, ASTBlock) -> Boolean>()
+        private var conditions = ArrayList<SpacingCondition>()
 
         override fun getSpacing(parent: ASTBlock, left: ASTBlock, right: ASTBlock): Spacing? {
             for (rule in rules) {
@@ -67,15 +78,7 @@ class KotlinSpacingBuilder(val codeStyleSettings: CodeStyleSettings) {
 
         fun inPosition(parent: IElementType? = null, left: IElementType? = null, right: IElementType? = null,
                        parentSet: TokenSet? = null, leftSet: TokenSet? = null, rightSet: TokenSet? = null): CustomSpacingBuilder {
-            conditions.add {
-                p, l, r ->
-                (parent == null || p.node!!.elementType == parent) &&
-                (left == null || l.node!!.elementType == left) &&
-                (right == null || r.node!!.elementType == right) &&
-                (parentSet == null || parentSet.contains(p.node!!.elementType)) &&
-                (leftSet == null || leftSet.contains(l.node!!.elementType)) &&
-                (rightSet == null || rightSet.contains(r.node!!.elementType))
-            }
+            conditions.add(SpacingCondition(parent, left, right, parentSet, leftSet, rightSet))
             return this
         }
 
@@ -100,17 +103,20 @@ class KotlinSpacingBuilder(val codeStyleSettings: CodeStyleSettings) {
             }
         }
 
-        fun spacing(debugName: String? = null, spacing: Spacing) {
+        fun spacing(spacing: Spacing, debugName: String? = null) {
             newRule(debugName) { parent, left, right -> spacing }
         }
 
-        fun customRule(debugName: String? = null, block: (parent: ASTBlock, left: ASTBlock, right: ASTBlock) -> Spacing?) {
-            newRule(debugName, block)
+        fun customRule(block: (parent: ASTBlock, left: ASTBlock, right: ASTBlock) -> Spacing?) {
+            newRule(null, block)
         }
 
         private fun newRule(debugName: String? = null, rule: (ASTBlock, ASTBlock, ASTBlock) -> Spacing?) {
             val savedConditions = ArrayList(conditions)
-            rules.add(SpacingRule({ p, l, r -> if (savedConditions.all { it(p, l, r) }) rule(p, l, r) else null }, debugName))
+            val spacingRule = SpacingRule(
+                    { p, l, r -> if (savedConditions.all { it.isApplicable(p, l, r) }) rule(p, l, r) else null },
+                    debugName)
+            rules.add(spacingRule)
             conditions.clear()
         }
     }
