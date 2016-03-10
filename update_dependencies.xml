@@ -53,11 +53,9 @@
     <property file="${dependencies.info.file}" prefix="dependencies.info.prev"/>
 
     <target name="update" depends="fetch-third-party,fetch-annotations" description="Update dependencies">
-        <execute_custom_update/>
-    </target>
-
-    <target name="update_custom" depends="fetch-third-party,fetch-annotations" description="Update dependencies">
-        <execute_custom_update/>
+        <execute_update_with_idea_maven_artifacts
+            base.url="https://www.jetbrains.com/intellij-repository/releases/com/jetbrains/intellij/idea"
+            idea.maven.version="${ideaVersion}"/>
     </target>
 
     <!--<target name="update_teamcity" depends="fetch-third-party,fetch-annotations">-->
