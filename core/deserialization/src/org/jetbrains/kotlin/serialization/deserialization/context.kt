@@ -40,8 +40,8 @@ class DeserializationComponents(
         val typeCapabilitiesLoader: TypeCapabilitiesLoader = TypeCapabilitiesLoader.NONE,
         val additionalSupertypes: AdditionalSupertypes = AdditionalSupertypes.None
 ) {
-    val classDeserializer: ClassDeserializer = ClassDeserializer(this)
-    val notFoundClasses: NotFoundClasses = NotFoundClasses(storageManager, moduleDescriptor)
+    val classDeserializer = ClassDeserializer(this)
+    val notFoundClasses = NotFoundClasses(storageManager, moduleDescriptor, errorReporter)
 
     fun deserializeClass(classId: ClassId): ClassDescriptor? = classDeserializer.deserializeClass(classId)
 

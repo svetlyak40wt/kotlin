@@ -74,7 +74,7 @@ class TypeDeserializer(
                 proto.hasClassName() -> {
                     val classDescriptor =
                             classDescriptors(proto.className)
-                            ?: c.components.notFoundClasses.get(proto, c.nameResolver, c.typeTable)
+                            ?: c.components.notFoundClasses.get(proto, c.nameResolver, c.typeTable, c.containingDeclaration)
                     classDescriptor.typeConstructor
                 }
                 proto.hasTypeParameter() ->

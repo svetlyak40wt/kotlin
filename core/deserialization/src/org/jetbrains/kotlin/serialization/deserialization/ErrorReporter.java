@@ -20,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.kotlin.descriptors.CallableMemberDescriptor;
 import org.jetbrains.kotlin.descriptors.ClassDescriptor;
+import org.jetbrains.kotlin.descriptors.DeclarationDescriptor;
 import org.jetbrains.kotlin.name.ClassId;
 
 import java.util.List;
@@ -30,6 +31,8 @@ public interface ErrorReporter {
     void reportIncompleteHierarchy(@NotNull ClassDescriptor descriptor, @NotNull List<String> unresolvedSuperClasses);
 
     void reportCannotInferVisibility(@NotNull CallableMemberDescriptor descriptor);
+
+    void reportNotFoundClass(@NotNull ClassId classId, @NotNull DeclarationDescriptor origin);
 
     void reportLoadingError(@NotNull String message, @Nullable Exception exception);
 
@@ -46,6 +49,10 @@ public interface ErrorReporter {
 
         @Override
         public void reportCannotInferVisibility(@NotNull CallableMemberDescriptor descriptor) {
+        }
+
+        @Override
+        public void reportNotFoundClass(@NotNull ClassId classId, @NotNull DeclarationDescriptor origin) {
         }
 
         @Override

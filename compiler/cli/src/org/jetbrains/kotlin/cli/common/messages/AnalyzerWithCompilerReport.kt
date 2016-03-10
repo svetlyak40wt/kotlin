@@ -33,6 +33,7 @@ import org.jetbrains.kotlin.load.java.components.IncompatibleVersionErrorData
 import org.jetbrains.kotlin.load.java.components.TraceBasedErrorReporter
 import org.jetbrains.kotlin.load.kotlin.JvmMetadataVersion
 import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.renderer.DescriptorRenderer
 import org.jetbrains.kotlin.resolve.AnalyzingUtils
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.DescriptorToSourceUtils
@@ -42,7 +43,6 @@ import org.jetbrains.kotlin.resolve.jvm.JvmClassName
 import org.jetbrains.kotlin.serialization.deserialization.BinaryVersion
 import java.util.*
 
-
 class AnalyzerWithCompilerReport(collector: MessageCollector) {
     private val messageCollector: MessageSeverityCollector = MessageSeverityCollector(collector)
 
@@ -51,15 +51,33 @@ class AnalyzerWithCompilerReport(collector: MessageCollector) {
     private fun reportIncompleteHierarchies() {
         val bindingContext = analysisResult.bindingContext
         val classes = bindingContext.getKeys(TraceBasedErrorReporter.INCOMPLETE_HIERARCHY)
-        if (!classes.isEmpty()) {
-            val message = StringBuilder("Supertypes of the following classes cannot be resolved. " +
-                                        "Please make sure you have the required dependencies in the classpath:\n")
-            for (descriptor in classes) {
-                val fqName = DescriptorUtils.getFqName(descriptor).asString()
-                val unresolved = bindingContext.get(TraceBasedErrorReporter.INCOMPLETE_HIERARCHY, descriptor)
-                assert(unresolved != null && !unresolved.isEmpty()) { "Incomplete hierarchy should be reported with names of unresolved superclasses: " + fqName }
-                message.append("    class ").append(fqName).append(", unresolved supertypes: ").append(unresolved!!.joinToString()).append("\n")
+        if (classes.isEmpty()) return
+
+        val message = StringBuilder("Supertypes of the following classes cannot be resolved. " +
+                                    "Please make sure you have the required dependencies in the classpath:\n")
+        for (descriptor in classes) {
+            val fqName = DescriptorUtils.getFqName(descriptor).asString()
+            val unresolved = bindingContext.get(TraceBasedErrorReporter.INCOMPLETE_HIERARCHY, descriptor)
+            assert(unresolved != null && !unresolved.isEmpty()) {
+                "Incomplete hierarchy should be reported with names of unresolved superclasses: $fqName"
             }
+            message.append("    class ").append(fqName).append(", unresolved supertypes: ").append(unresolved!!.joinToString()).append("\n")
+        }
+        messageCollector.report(CompilerMessageSeverity.ERROR, message.toString(), CompilerMessageLocation.NO_LOCATION)
+    }
+
+    private fun reportNotFoundClasses() {
+        val bindingContext = analysisResult.bindingContext
+        val classIds = bindingContext.getKeys(TraceBasedErrorReporter.NOT_FOUND_CLASSES)
+        if (classIds.isEmpty()) return
+
+        for (classId in classIds) {
+            val origin = bindingContext.get(TraceBasedErrorReporter.NOT_FOUND_CLASSES, classId)!!
+            val originDescription = DescriptorRenderer.COMPACT_WITH_SHORT_TYPES.render(origin)
+
+            val message = "Class '${classId.asSingleFqName().asString()}' was not found while loading '" + originDescription + "'. " +
+                          "Please make sure you have the required dependencies in the classpath"
+
             messageCollector.report(CompilerMessageSeverity.ERROR, message.toString(), CompilerMessageLocation.NO_LOCATION)
         }
     }
@@ -136,6 +154,7 @@ class AnalyzerWithCompilerReport(collector: MessageCollector) {
         if (hasErrors()) {
             reportMetadataVersionErrors(abiVersionErrors)
         }
+        reportNotFoundClasses()
         reportIncompleteHierarchies()
         reportAlternativeSignatureErrors()
     }

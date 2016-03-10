@@ -32,18 +32,33 @@ import org.jetbrains.kotlin.types.TypeConstructorImpl
 import org.jetbrains.kotlin.types.Variance
 import org.jetbrains.kotlin.utils.toReadOnlyList
 
-class NotFoundClasses(private val storageManager: StorageManager, private val module: ModuleDescriptor) {
+class NotFoundClasses(
+        private val storageManager: StorageManager,
+        private val module: ModuleDescriptor,
+        private val errorReporter: ErrorReporter
+) {
     /**
      * @param typeParametersCount list of numbers of type parameters in this class and all its outer classes, starting from this class
      */
-    private data class ClassRequest(val classId: ClassId, val typeParametersCount: List<Int>)
+    private class ClassRequest(val classId: ClassId, val typeParametersCount: List<Int>, val origin: DeclarationDescriptor?) {
+        operator fun component1() = classId
+        operator fun component2() = typeParametersCount
+        operator fun component3() = origin
+
+        // 'origin' is not participating in equals/hashCode intentionally
+        override fun equals(other: Any?) =
+                other is ClassRequest && classId == other.classId && typeParametersCount == other.typeParametersCount
+
+        override fun hashCode() =
+                classId.hashCode() * 31 + typeParametersCount.hashCode()
+    }
 
     private val packageFragments = storageManager.createMemoizedFunction<FqName, PackageFragmentDescriptor> { fqName ->
         EmptyPackageFragmentDescriptor(module, fqName)
     }
 
     private val classes = storageManager.createMemoizedFunction<ClassRequest, ClassDescriptor> { request ->
-        val (classId, typeParametersCount) = request
+        val (classId, typeParametersCount, origin) = request
 
         if (classId.isLocal) {
             throw UnsupportedOperationException("Unresolved local class: $classId")
@@ -53,8 +68,12 @@ class NotFoundClasses(private val storageManager: StorageManager, private val mo
             throw IllegalStateException("Illegal metadata for type: no type arguments written for generic type $classId")
         }
 
+        if (origin != null) {
+            errorReporter.reportNotFoundClass(classId, origin)
+        }
+
         val container =
-                if (classId.isNestedClass) get(classId.outerClassId, typeParametersCount.drop(1))
+                if (classId.isNestedClass) get(classId.outerClassId, typeParametersCount.drop(1), origin = null)
                 else packageFragments(classId.packageFqName)
 
         // Treat a class with a nested ClassId as inner for simplicity, otherwise the outer type cannot have generic arguments
@@ -102,14 +121,15 @@ class NotFoundClasses(private val storageManager: StorageManager, private val mo
     // (This may happen when a class with the same FQ name is instantiated with different type arguments in different modules.)
     // It's better than creating just one descriptor because otherwise would fail in multiple places where it's asserted that
     // the number of type arguments in a type must be equal to the number of the type parameters of the class
-    private fun get(classId: ClassId, typeParametersCount: List<Int>): ClassDescriptor {
-        return classes(ClassRequest(classId, typeParametersCount))
+    private fun get(classId: ClassId, typeParametersCount: List<Int>, origin: DeclarationDescriptor?): ClassDescriptor {
+        return classes(ClassRequest(classId, typeParametersCount, origin))
     }
 
-    fun get(proto: ProtoBuf.Type, nameResolver: NameResolver, typeTable: TypeTable): ClassDescriptor {
+    fun get(proto: ProtoBuf.Type, nameResolver: NameResolver, typeTable: TypeTable, origin: DeclarationDescriptor): ClassDescriptor {
         return get(
                 nameResolver.getClassId(proto.className),
-                generateSequence(proto) { it.outerType(typeTable) }.map { it.argumentCount }.toList().toReadOnlyList()
+                generateSequence(proto) { it.outerType(typeTable) }.map { it.argumentCount }.toList().toReadOnlyList(),
+                origin
         )
     }
 }

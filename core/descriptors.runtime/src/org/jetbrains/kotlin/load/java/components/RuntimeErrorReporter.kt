@@ -18,8 +18,10 @@ package org.jetbrains.kotlin.load.java.components
 
 import org.jetbrains.kotlin.descriptors.CallableMemberDescriptor
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
+import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.load.kotlin.JvmMetadataVersion
 import org.jetbrains.kotlin.name.ClassId
+import org.jetbrains.kotlin.renderer.DescriptorRenderer
 import org.jetbrains.kotlin.serialization.deserialization.BinaryVersion
 import org.jetbrains.kotlin.serialization.deserialization.ErrorReporter
 
@@ -37,6 +39,10 @@ object RuntimeErrorReporter : ErrorReporter {
     override fun reportCannotInferVisibility(descriptor: CallableMemberDescriptor) {
         // TODO: use DescriptorRenderer
         throw IllegalStateException("Cannot infer visibility for $descriptor")
+    }
+
+    override fun reportNotFoundClass(classId: ClassId, origin: DeclarationDescriptor) {
+        throw IllegalStateException("Class not found: $classId, referenced in: ${DescriptorRenderer.FQ_NAMES_IN_TYPES.render(origin)}")
     }
 
     override fun reportLoadingError(message: String, exception: Exception?) {

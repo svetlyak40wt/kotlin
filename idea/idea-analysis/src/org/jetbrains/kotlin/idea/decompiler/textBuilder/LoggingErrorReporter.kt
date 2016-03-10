@@ -19,6 +19,7 @@ package org.jetbrains.kotlin.idea.decompiler.textBuilder
 import com.intellij.openapi.diagnostic.Logger
 import org.jetbrains.kotlin.descriptors.CallableMemberDescriptor
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
+import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.serialization.deserialization.BinaryVersion
 import org.jetbrains.kotlin.serialization.deserialization.ErrorReporter
@@ -34,6 +35,10 @@ class LoggingErrorReporter(private val log: Logger) : ErrorReporter {
 
     override fun reportCannotInferVisibility(descriptor: CallableMemberDescriptor) {
         log.error("Could not infer visibility for $descriptor")
+    }
+
+    override fun reportNotFoundClass(classId: ClassId, origin: DeclarationDescriptor) {
+        // Normal situation for the decompiler, a class may be not found in the dependencies
     }
 
     override fun reportIncompatibleMetadataVersion(classId: ClassId, filePath: String, actualVersion: BinaryVersion) {

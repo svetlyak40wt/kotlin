@@ -19,6 +19,7 @@ package org.jetbrains.kotlin.load.java.components
 import com.intellij.openapi.diagnostic.Logger
 import org.jetbrains.kotlin.descriptors.CallableMemberDescriptor
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
+import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.resolve.BindingTrace
 import org.jetbrains.kotlin.resolve.OverrideResolver
@@ -28,7 +29,6 @@ import org.jetbrains.kotlin.util.slicedMap.Slices
 import org.jetbrains.kotlin.util.slicedMap.WritableSlice
 
 class TraceBasedErrorReporter(private val trace: BindingTrace) : ErrorReporter {
-
     companion object {
         private val LOG = Logger.getInstance(TraceBasedErrorReporter::class.java)
 
@@ -38,6 +38,9 @@ class TraceBasedErrorReporter(private val trace: BindingTrace) : ErrorReporter {
         // TODO: MutableList is a workaround for KT-5792 Covariant types in Kotlin translated to wildcard types in Java
         @JvmField
         val INCOMPLETE_HIERARCHY: WritableSlice<ClassDescriptor, MutableList<String>> = Slices.createCollectiveSlice()
+
+        @JvmField
+        val NOT_FOUND_CLASSES: WritableSlice<ClassId, DeclarationDescriptor> = Slices.createCollectiveSlice()
     }
 
     override fun reportIncompatibleMetadataVersion(classId: ClassId, filePath: String, actualVersion: BinaryVersion) {
@@ -51,6 +54,13 @@ class TraceBasedErrorReporter(private val trace: BindingTrace) : ErrorReporter {
 
     override fun reportCannotInferVisibility(descriptor: CallableMemberDescriptor) {
         OverrideResolver.createCannotInferVisibilityReporter(trace).invoke(descriptor)
+    }
+
+    override fun reportNotFoundClass(classId: ClassId, origin: DeclarationDescriptor) {
+        if (trace.get(NOT_FOUND_CLASSES, classId) == null) {
+            // Record only the first appearance of a missing class
+            trace.record(NOT_FOUND_CLASSES, classId, origin)
+        }
     }
 
     override fun reportLoadingError(message: String, exception: Exception?) {
