@@ -14,6 +14,8 @@
 
     <property name="bootstrap.build.no.tests" value="false"/>
 
+    <property name="configure.ultimate.sdk" value="true"/>
+
     <!-- Uncomment to enable force version increment in branch. Set override.version.disabled to temporary disable feature without commits -->
     <!--
     <property name="override.version.url" value="https://teamcity.jetbrains.com/guestAuth/app/rest/builds/?locator=buildType:bt345,count:1${kotlin.bootstrap.branch.locator}"/>
@@ -42,6 +44,8 @@
     </condition>
 
     <property name="idea.dir" value="ideaSDK"/>
+    <property name="idea.community.dir" value="${idea.dir}"/>
+    <property name="idea.ultimate.dir" value="ideaUltimateSDK"/>
     <property name="idea.sdk.fetch.needed" value="true"/>
 
     <property name="dependencies.info.file" value="dependencies/dependencies.properties"/>
@@ -487,9 +491,27 @@
             <get src="@{base.url}/BUILD/@{idea.maven.version}/BUILD-@{idea.maven.version}.txt" dest="dependencies/version.txt"/>
             <loadfile property="execute.build.id" srcFile="dependencies/version.txt"/>
 
+            <local name="same.sdk.version"/>
+            <condition property="same.sdk.version">
+                <equals arg1="${dependencies.info.prev.idea.build.id}" arg2="${execute.build.id}"/>
+            </condition>
+
+            <local name="ultimate.needed"/>
+            <condition property="ultimate.needed">
+                <and>
+                    <istrue value="${configure.ultimate.sdk}"/>
+                    <not>
+                        <available file="${idea.ultimate.dir}/build.txt"/>
+                    </not>
+                </and>
+            </condition>
+
             <local name="idea.already.downloaded"/>
             <condition property="idea.already.downloaded">
-                <equals arg1="${dependencies.info.prev.idea.build.id}" arg2="${execute.build.id}"/>
+                <and>
+                    <istrue value="${same.sdk.version}"/>
+                    <isfalse value="${ultimate.needed}"/>
+                </and>
             </condition>
 
             <echo message="IDEA build id: ${execute.build.id}. Already downloaded." if:set="idea.already.downloaded"/>
@@ -719,6 +741,26 @@
         </sequential>
     </macrodef>
 
+    <macrodef name="configure_idea_sdk_dir_by_download_dir">
+        <attribute name="idea.dir"/>
+        <attribute name="idea.sdk.fetch.needed"/>
+        <attribute name="download.dir"/>
+        <attribute name="idea.maven.version"/>
+        <attribute name="idea.sdk.archive.file.name"/>
+
+        <sequential>
+            <configure_idea_sdk_dir
+                idea.dir="@{idea.dir}"
+                idea.sdk.fetch.needed="@{idea.sdk.fetch.needed}"
+
+                download.dir.intellij-core="@{download.dir}/intellij-core-@{idea.maven.version}"
+                download.dir.jps-standalone="@{download.dir}/jps-standalone-@{idea.maven.version}"
+                download.file.archive.idea="@{download.dir}/@{idea.sdk.archive.file.name}"
+                download.file.archive.sources="@{download.dir}/ideaIC-@{idea.maven.version}-sources.jar"
+                download.file.archive.jps-build-test="@{download.dir}/jps-build-test-@{idea.maven.version}.jar"/>
+        </sequential>
+    </macrodef>
+
     <macrodef name="download_and_update_idea">
         <attribute name="idea.maven.version"/>
         <attribute name="base.repository.url"/>
@@ -729,8 +771,10 @@
             <delete dir="@{download.dir}"/>
             <mkdir dir="@{download.dir}"/>
 
-            <get src="@{base.repository.url}/ideaIC/@{idea.maven.version}/ideaIC-@{idea.maven.version}-sources.jar"
-                 dest="@{download.dir}/ideaIC-@{idea.maven.version}-sources.jar" usetimestamp="true"/>
+            <get src="@{base.repository.url}/ideaIU/@{idea.maven.version}/ideaIU-@{idea.maven.version}.zip"
+                 dest="@{download.dir}/ideaIU-@{idea.maven.version}.zip"
+                 usetimestamp="true"
+                 if:set="configure.ultimate.sdk"/>
 
             <get src="@{base.repository.url}/ideaIC/@{idea.maven.version}/ideaIC-@{idea.maven.version}.zip"
                  dest="@{download.dir}/ideaIC-@{idea.maven.version}.zip" usetimestamp="true"/>
@@ -748,15 +792,23 @@
                 url="@{base.repository.url}/jps-standalone/@{idea.maven.version}/jps-standalone-@{idea.maven.version}.zip"
                 usetimestamp="true"/>
 
-            <configure_idea_sdk_dir
-                idea.dir="${idea.dir}"
-                idea.sdk.fetch.needed="${idea.sdk.fetch.needed}"
+            <get src="@{base.repository.url}/ideaIC/@{idea.maven.version}/ideaIC-@{idea.maven.version}-sources.jar"
+                 dest="@{download.dir}/ideaIC-@{idea.maven.version}-sources.jar" usetimestamp="true"/>
 
-                download.dir.intellij-core="@{download.dir}/intellij-core-@{idea.maven.version}"
-                download.dir.jps-standalone="@{download.dir}/jps-standalone-@{idea.maven.version}"
-                download.file.archive.idea="@{download.dir}/ideaIC-@{idea.maven.version}.zip"
-                download.file.archive.sources="@{download.dir}/ideaIC-@{idea.maven.version}-sources.jar"
-                download.file.archive.jps-build-test="@{download.dir}/jps-build-test-@{idea.maven.version}.jar"/>
+            <configure_idea_sdk_dir_by_download_dir
+                idea.dir="${idea.community.dir}"
+                idea.sdk.fetch.needed="${idea.sdk.fetch.needed}"
+                download.dir="@{download.dir}"
+                idea.maven.version="@{idea.maven.version}"
+                idea.sdk.archive.file.name="ideaIC-@{idea.maven.version}.zip"/>
+
+            <configure_idea_sdk_dir_by_download_dir
+                idea.dir="${idea.ultimate.dir}"
+                idea.sdk.fetch.needed="${idea.sdk.fetch.needed}"
+                download.dir="@{download.dir}"
+                idea.maven.version="@{idea.maven.version}"
+                idea.sdk.archive.file.name="ideaIU-@{idea.maven.version}.zip"
+                if:set="configure.ultimate.sdk"/>
         </sequential>
     </macrodef>
 

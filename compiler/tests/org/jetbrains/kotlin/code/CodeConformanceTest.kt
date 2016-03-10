@@ -36,6 +36,7 @@ class CodeConformanceTest : TestCase() {
                 "out",
                 "dist",
                 "ideaSDK",
+                "ideaUltimateSDK",
                 "libraries/tools/kotlin-gradle-plugin-core/gradle_api_jar/build/tmp",
                 "libraries/tools/kotlin-maven-plugin/target/generated-sources",
                 "compiler/testData/psi/kdoc",
