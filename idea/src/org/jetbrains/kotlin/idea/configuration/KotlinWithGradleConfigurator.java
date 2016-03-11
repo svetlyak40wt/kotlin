@@ -19,6 +19,7 @@ package org.jetbrains.kotlin.idea.configuration;
 import com.intellij.codeInsight.CodeInsightUtilCore;
 import com.intellij.ide.actions.OpenFileAction;
 import com.intellij.openapi.application.Result;
+import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
@@ -70,41 +71,46 @@ public abstract class KotlinWithGradleConfigurator implements KotlinProjectConfi
     }
 
     @Override
-    public void configure(@NotNull Project project, Collection<Module> excludeModules) {
-        ConfigureDialogWithModulesAndVersion dialog =
+    public void configure(@NotNull final Project project, Collection<Module> excludeModules) {
+        final ConfigureDialogWithModulesAndVersion dialog =
                 new ConfigureDialogWithModulesAndVersion(project, this, excludeModules);
 
         dialog.show();
         if (!dialog.isOK()) return;
 
-        NotificationMessageCollector collector = NotificationMessageCollectorKt.createConfigureKotlinNotificationCollector(project);
-        List<GroovyFile> changedFiles = new ArrayList<GroovyFile>();
-        GroovyFile projectGradleFile = getBuildGradleFile(project, getDefaultPathToBuildGradleFile(project));
-        if (projectGradleFile != null && canConfigureFile(projectGradleFile)) {
-            boolean isModified = changeGradleFile(projectGradleFile, true, dialog.getKotlinVersion(), collector);
-            if (isModified) {
-                changedFiles.add(projectGradleFile);
-            }
-        }
-
-        for (Module module : dialog.getModulesToConfigure()) {
-            String gradleFilePath = getDefaultPathToBuildGradleFile(module);
-            GroovyFile file = getBuildGradleFile(project, gradleFilePath);
-            if (file != null && canConfigureFile(file)) {
-                boolean isModified = changeGradleFile(file, false, dialog.getKotlinVersion(), collector);
-                if (isModified) {
-                    changedFiles.add(file);
+        CommandProcessor.getInstance().executeCommand(project, new Runnable() {
+            @Override
+            public void run() {
+                NotificationMessageCollector collector = NotificationMessageCollectorKt.createConfigureKotlinNotificationCollector(project);
+                List<GroovyFile> changedFiles = new ArrayList<GroovyFile>();
+                GroovyFile projectGradleFile = getBuildGradleFile(project, getDefaultPathToBuildGradleFile(project));
+                if (projectGradleFile != null && canConfigureFile(projectGradleFile)) {
+                    boolean isModified = changeGradleFile(projectGradleFile, true, dialog.getKotlinVersion(), collector);
+                    if (isModified) {
+                        changedFiles.add(projectGradleFile);
+                    }
                 }
-            }
-            else {
-                showErrorMessage(project, "Cannot find build.gradle file for module " + module.getName());
-            }
-        }
 
-        for (GroovyFile file : changedFiles) {
-            OpenFileAction.openFile(file.getVirtualFile(), project);
-        }
-        collector.showNotification();
+                for (Module module : dialog.getModulesToConfigure()) {
+                    String gradleFilePath = getDefaultPathToBuildGradleFile(module);
+                    GroovyFile file = getBuildGradleFile(project, gradleFilePath);
+                    if (file != null && canConfigureFile(file)) {
+                        boolean isModified = changeGradleFile(file, false, dialog.getKotlinVersion(), collector);
+                        if (isModified) {
+                            changedFiles.add(file);
+                        }
+                    }
+                    else {
+                        showErrorMessage(project, "Cannot find build.gradle file for module " + module.getName());
+                    }
+                }
+
+                for (GroovyFile file : changedFiles) {
+                    OpenFileAction.openFile(file.getVirtualFile(), project);
+                }
+                collector.showNotification();
+            }
+        }, "Configure Kotlin", null);
     }
 
     public static void addKotlinLibraryToModule(final Module module, final DependencyScope scope, final ExternalLibraryDescriptor libraryDescriptor) {
