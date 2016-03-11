@@ -16,6 +16,7 @@
 
 package org.jetbrains.kotlin.android.configure;
 
+import com.android.tools.idea.gradle.GradleSyncState;
 import com.intellij.openapi.module.Module;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.kotlin.idea.KotlinPluginUtil;
@@ -29,6 +30,11 @@ public class KotlinAndroidGradleModuleConfigurator extends KotlinWithGradleConfi
     public static final String NAME = "android-gradle";
 
     private static final String APPLY_KOTLIN_ANDROID = "apply plugin: 'kotlin-android'";
+
+    @Override
+    public boolean isConfigured(@NotNull Module module) {
+        return GradleSyncState.getInstance(module.getProject()).isSyncInProgress() || super.isConfigured(module);
+    }
 
     @NotNull
     @Override

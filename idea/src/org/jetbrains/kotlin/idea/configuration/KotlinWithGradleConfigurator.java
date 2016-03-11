@@ -24,6 +24,7 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.DependencyScope;
 import com.intellij.openapi.roots.ExternalLibraryDescriptor;
+import com.intellij.openapi.roots.FileIndexFacade;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -65,21 +66,7 @@ public abstract class KotlinWithGradleConfigurator implements KotlinProjectConfi
 
     @Override
     public boolean isConfigured(@NotNull Module module) {
-        if (ConfigureKotlinInProjectUtilsKt.hasKotlinRuntimeInScope(module)) {
-            return true;
-        }
-
-        GroovyFile moduleGradleFile = getBuildGradleFile(module.getProject(), getDefaultPathToBuildGradleFile(module));
-        if (moduleGradleFile != null && isFileConfigured(moduleGradleFile)) {
-            return true;
-        }
-        GroovyFile projectGradleFile = getBuildGradleFile(module.getProject(), getDefaultPathToBuildGradleFile(module.getProject()));
-        return projectGradleFile != null && isFileConfigured(projectGradleFile);
-    }
-
-    private boolean isFileConfigured(GroovyFile projectGradleFile) {
-        String fileText = projectGradleFile.getText();
-        return fileText.contains(getApplyPluginDirective()) && fileText.contains(LIBRARY);
+        return ConfigureKotlinInProjectUtilsKt.hasKotlinRuntimeInScope(module);
     }
 
     @Override
@@ -220,7 +207,8 @@ public abstract class KotlinWithGradleConfigurator implements KotlinProjectConfi
         }
 
         GrClosableBlock dependenciesBlock = getDependenciesBlock(file);
-        addLastExpressionInBlockIfNeeded(LIBRARY, dependenciesBlock);
+        Module module = FileIndexFacade.getInstance(file.getProject()).getModuleForFile(file.getVirtualFile());
+        addExpressionInBlockIfNeeded(LIBRARY, dependenciesBlock, false, !ConfigureKotlinInProjectUtilsKt.hasKotlinRuntimeInScope(module));
 
         addSourceSetsBlock(file);
     }
@@ -359,11 +347,11 @@ public abstract class KotlinWithGradleConfigurator implements KotlinProjectConfi
     }
 
     protected static void addLastExpressionInBlockIfNeeded(@NotNull String text, @NotNull GrClosableBlock block) {
-        addExpressionInBlockIfNeeded(text, block, false);
+        addExpressionInBlockIfNeeded(text, block, false, false);
     }
 
     protected static void addFirstExpressionInBlockIfNeeded(@NotNull String text, @NotNull GrClosableBlock block) {
-        addExpressionInBlockIfNeeded(text, block, true);
+        addExpressionInBlockIfNeeded(text, block, true, false);
     }
 
     @Nullable
@@ -381,8 +369,8 @@ public abstract class KotlinWithGradleConfigurator implements KotlinProjectConfi
         return null;
     }
 
-    private static void addExpressionInBlockIfNeeded(@NotNull String text, @NotNull GrClosableBlock block, boolean isFirst) {
-        if (block.getText().contains(text)) return;
+    private static void addExpressionInBlockIfNeeded(@NotNull String text, @NotNull GrClosableBlock block, boolean isFirst, boolean forceInsert) {
+        if (!forceInsert && block.getText().contains(text)) return;
         GrExpression newStatement = GroovyPsiElementFactory.getInstance(block.getProject()).createExpressionFromText(text);
         CodeStyleManager.getInstance(block.getProject()).reformat(newStatement);
         GrStatement[] statements = block.getStatements();
