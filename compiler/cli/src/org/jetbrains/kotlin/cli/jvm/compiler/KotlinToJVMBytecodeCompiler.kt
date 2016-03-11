@@ -399,7 +399,8 @@ object KotlinToJVMBytecodeCompiler {
                 outputDirectory,
                 incrementalCompilationComponents,
                 configuration.get(JVMConfigurationKeys.MULTIFILE_FACADES_OPEN, false),
-                onIndependentPartCompilationEnd = onIndependentPartCompilationEnd)
+                onIndependentPartCompilationEnd = onIndependentPartCompilationEnd,
+                dumpBinarySignatureMappingTo = outputDirectory?.resolve("binary-signatures.json") ?: createTempFile("binary-signatures", ".json"))
         ProgressIndicatorAndCompilationCanceledStatus.checkCanceled()
 
         val generationStart = PerformanceCounter.currentTime()
