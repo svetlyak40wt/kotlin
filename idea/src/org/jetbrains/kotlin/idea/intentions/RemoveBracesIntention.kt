@@ -61,7 +61,7 @@ class RemoveBracesIntention : SelfTargetingIntention<KtBlockExpression>(KtBlockE
                     construct.prevSibling!!.replace(psiFactory.createNewLine())
                 }
                 val commentElement = construct.parent!!.addBefore(sibling, construct.prevSibling)
-                construct.parent!!.addBefore(psiFactory.createNewLine(), commentElement)
+                construct.parent!!.addBefore(psiFactory.createWhiteSpace("\n "), commentElement)
             }
             sibling = sibling.nextSibling
         }
