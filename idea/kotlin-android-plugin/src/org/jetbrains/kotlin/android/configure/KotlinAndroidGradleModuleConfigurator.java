@@ -65,21 +65,20 @@ public class KotlinAndroidGradleModuleConfigurator extends KotlinWithGradleConfi
     }
 
     @Override
-    protected void addSourceSetsBlock(@NotNull GroovyFile file) {
+    protected boolean addSourceSetsBlock(@NotNull GroovyFile file) {
         GrClosableBlock androidBlock = getAndroidBlock(file);
-        KotlinWithGradleConfigurator.addLastExpressionInBlockIfNeeded(KotlinWithGradleConfigurator.SOURCE_SET, KotlinWithGradleConfigurator
+        return KotlinWithGradleConfigurator.addLastExpressionInBlockIfNeeded(KotlinWithGradleConfigurator.SOURCE_SET, KotlinWithGradleConfigurator
                 .getSourceSetsBlock(androidBlock));
     }
 
     @Override
     protected boolean addElementsToFile(@NotNull GroovyFile groovyFile, boolean isProjectFile, @NotNull String version) {
         if (isProjectFile) {
-            addElementsToProjectFile(groovyFile, version);
+            return addElementsToProjectFile(groovyFile, version);
         }
         else {
-            addElementsToModuleFile(groovyFile, version);
+            return addElementsToModuleFile(groovyFile, version);
         }
-        return true;
     }
 
     @NotNull

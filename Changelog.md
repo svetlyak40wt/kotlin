@@ -4,6 +4,7 @@
 
 ## 1.0.2
 - Do not show 'Kotlin not configured' during project gradle sync
+- Show only changed files in notification "Kotlin not configured"
 
 ### JS
 - Safe calls (`x?.let { it }`) are now inlined
