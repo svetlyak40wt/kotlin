@@ -1196,4 +1196,12 @@
     <target name="build-bootstrap-artifacts" depends="dist,zip-compiler"/>
 
     <target name="build-artifacts" depends="dist,zip-compiler,kotlin-for-upsource,zip-test-data"/>
+
+    <target name="add-links-to-issues-in-changelog">
+        <replaceregexp file="${basedir}/Changelog.md"
+                       match="([^\[/])KT-(\d+)"
+                       replace="\1[KT-\2](https://youtrack.jetbrains.com/issue/KT-\2)"
+                       flags="gi"
+        />
+    </target>
 </project>
