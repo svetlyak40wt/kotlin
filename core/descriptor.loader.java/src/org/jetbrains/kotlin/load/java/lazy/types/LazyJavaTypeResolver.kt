@@ -154,20 +154,20 @@ class LazyJavaTypeResolver(
             return kotlinDescriptor
         }
 
-        private fun isRaw(): Boolean {
-            if (javaType.isRaw) return true
+        private val isRaw: Boolean by lazy(LazyThreadSafetyMode.NONE) isRaw@{
+            if (javaType.isRaw) return@isRaw true
 
             // This option is needed because sometimes we get weird versions of JDK classes in the class path,
             // such as collections with no generics, so the Java types are not raw, formally, but they don't match with
             // their Kotlin analogs, so we treat them as raw to avoid exceptions
             // No type arguments, but some are expected => raw
-            return javaType.typeArguments.isEmpty() && !getConstructor().parameters.isEmpty()
+            javaType.typeArguments.isEmpty() && !constructor.parameters.isEmpty()
         }
 
         override fun computeArguments(): List<TypeProjection> {
-            val typeConstructor = getConstructor()
+            val typeConstructor = constructor
             val typeParameters = typeConstructor.parameters
-            if (isRaw()) {
+            if (isRaw) {
                 return typeParameters.map {
                     parameter ->
                     // Some activity for preventing recursion in cases like `class A<T extends A, F extends T>`
@@ -191,12 +191,13 @@ class LazyJavaTypeResolver(
                 }.toReadOnlyList()
             }
 
-            if (typeParameters.size != javaType.typeArguments.size) {
+            val javaTypeArguments = javaType.typeArguments
+            if (typeParameters.size != javaTypeArguments.size) {
                 // Most of the time this means there is an error in the Java code
                 return typeParameters.map { p -> TypeProjectionImpl(ErrorUtils.createErrorType(p.name.asString())) }.toReadOnlyList()
             }
             var howTheProjectionIsUsed = if (attr.howThisTypeIsUsed == SUPERTYPE) SUPERTYPE_ARGUMENT else TYPE_ARGUMENT
-            return javaType.typeArguments.withIndex().map {
+            return javaTypeArguments.withIndex().map {
                 indexedArgument ->
                 val (i, javaTypeArgument) = indexedArgument
 
@@ -231,7 +232,7 @@ class LazyJavaTypeResolver(
             }
         }
 
-        override fun getCapabilities(): TypeCapabilities = if (isRaw()) RawTypeCapabilities else TypeCapabilities.NONE
+        override fun getCapabilities(): TypeCapabilities = if (isRaw) RawTypeCapabilities else TypeCapabilities.NONE
 
         private val nullable = c.storageManager.createLazyValue l@ {
             when (attr.flexibility) {
