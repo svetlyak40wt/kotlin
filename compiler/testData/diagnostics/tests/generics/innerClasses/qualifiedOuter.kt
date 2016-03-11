@@ -3,7 +3,7 @@
 
 class Outer<T> {
     inner class Inner
-    fun foo(x: Outer<String>.Inner, y: <!WRONG_NUMBER_OF_TYPE_ARGUMENTS!>Outer<!>.Inner, z: Inner) {
+    fun foo(x: Outer<String>.Inner, y: <!WRONG_NUMBER_OF_TYPE_ARGUMENTS_FOR_CLASS!>Outer<!>.Inner, z: Inner) {
         var inner = Inner()
         x.checkType { <!TYPE_MISMATCH!>_<!><Inner>() }
         x.checkType { _<Outer<String>.Inner>() }

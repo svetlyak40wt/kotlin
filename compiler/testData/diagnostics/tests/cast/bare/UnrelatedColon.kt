@@ -3,4 +3,4 @@
 interface Tr
 interface G<T>
 
-fun test(tr: Tr) = checkSubtype<<!WRONG_NUMBER_OF_TYPE_ARGUMENTS!>G<!>>(tr)
+fun test(tr: Tr) = checkSubtype<<!WRONG_NUMBER_OF_TYPE_ARGUMENTS_FOR_CLASS!>G<!>>(tr)

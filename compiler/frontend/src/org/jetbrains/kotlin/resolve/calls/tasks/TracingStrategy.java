@@ -67,7 +67,7 @@ public interface TracingStrategy {
         public void noValueForParameter(@NotNull BindingTrace trace, @NotNull ValueParameterDescriptor valueParameter) {}
 
         @Override
-        public void wrongNumberOfTypeArguments(@NotNull BindingTrace trace, int expectedTypeArgumentCount, @NotNull DeclarationDescriptor descriptor) {}
+        public void wrongNumberOfTypeArguments(@NotNull BindingTrace trace, int expectedTypeArgumentCount, @NotNull CallableDescriptor descriptor) {}
 
         @Override
         public <D extends CallableDescriptor> void ambiguity(@NotNull BindingTrace trace, @NotNull Collection<? extends ResolvedCall<D>> descriptors) {}
@@ -135,7 +135,7 @@ public interface TracingStrategy {
     void wrongNumberOfTypeArguments(
             @NotNull BindingTrace trace,
             int expectedTypeArgumentCount,
-            @NotNull DeclarationDescriptor descriptor
+            @NotNull CallableDescriptor descriptor
     );
 
     <D extends CallableDescriptor> void ambiguity(@NotNull BindingTrace trace, @NotNull Collection<? extends ResolvedCall<D>> descriptors);

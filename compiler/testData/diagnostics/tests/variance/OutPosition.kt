@@ -32,9 +32,9 @@ interface Test<in I, out O, P> {
     fun neOk11(): Inv<out <!TYPE_VARIANCE_CONFLICT(I; in; out; Inv<out I>)!>I<!>>
 
     fun neOk30(): Pair<<!TYPE_VARIANCE_CONFLICT(I; in; out; Pair<I, [ERROR : No type element]>)!>I<!>, <!SYNTAX!><!>>
-    fun neOk31(): Pair<<!TYPE_VARIANCE_CONFLICT(I; in; out; Pair<I, [ERROR : Inv]>)!>I<!>, <!WRONG_NUMBER_OF_TYPE_ARGUMENTS!>Inv<!>>
-    fun neOk32(): <!WRONG_NUMBER_OF_TYPE_ARGUMENTS!>Inv<!>
+    fun neOk31(): Pair<<!TYPE_VARIANCE_CONFLICT(I; in; out; Pair<I, [ERROR : Inv]>)!>I<!>, <!WRONG_NUMBER_OF_TYPE_ARGUMENTS_FOR_CLASS!>Inv<!>>
+    fun neOk32(): <!WRONG_NUMBER_OF_TYPE_ARGUMENTS_FOR_CLASS!>Inv<!>
     fun neOk33(): Inv<<!SYNTAX!><!>>
     fun neOk34(): Inv<<!UNRESOLVED_REFERENCE!>C<!>>
-    fun neOk35(): Inv<!WRONG_NUMBER_OF_TYPE_ARGUMENTS!><P, P><!>
+    fun neOk35(): Inv<!WRONG_NUMBER_OF_TYPE_ARGUMENTS_FOR_CLASS!><P, P><!>
 }

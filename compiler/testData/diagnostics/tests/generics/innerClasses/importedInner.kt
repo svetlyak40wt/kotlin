@@ -13,4 +13,4 @@ class Outer<E> {
 
 class E
 
-fun bar(x: <!WRONG_NUMBER_OF_TYPE_ARGUMENTS!>Inner<!>) {}
+fun bar(x: <!WRONG_NUMBER_OF_TYPE_ARGUMENTS_FOR_CLASS!>Inner<!>) {}

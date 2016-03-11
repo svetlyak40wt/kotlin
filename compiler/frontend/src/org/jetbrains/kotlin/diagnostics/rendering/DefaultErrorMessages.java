@@ -28,7 +28,6 @@ import org.jetbrains.kotlin.diagnostics.TypeMismatchDueToTypeProjectionsData;
 import org.jetbrains.kotlin.psi.KtExpression;
 import org.jetbrains.kotlin.psi.KtSimpleNameExpression;
 import org.jetbrains.kotlin.psi.KtTypeConstraint;
-import org.jetbrains.kotlin.renderer.DescriptorRenderer;
 import org.jetbrains.kotlin.resolve.varianceChecker.VarianceChecker.VarianceConflictDiagnosticData;
 import org.jetbrains.kotlin.types.KotlinType;
 import org.jetbrains.kotlin.util.MappedExtensionProvider;
@@ -654,7 +653,8 @@ public class DefaultErrorMessages {
 
         MAP.put(TYPE_INFERENCE_FAILED_ON_SPECIAL_CONSTRUCT, "Type inference for control flow expression failed. Please specify its type explicitly.");
 
-        MAP.put(WRONG_NUMBER_OF_TYPE_ARGUMENTS, "{0,choice,0#No type arguments|1#Type argument|1<{0,number,integer} type arguments} expected for {1}", (DiagnosticParameterRenderer) null, NAME);
+        MAP.put(WRONG_NUMBER_OF_TYPE_ARGUMENTS_FOR_CLASS, "{0,choice,0#No type arguments|1#Type argument|1<{0,number,integer} type arguments} expected for {1}", null, NAME);
+        MAP.put(WRONG_NUMBER_OF_TYPE_ARGUMENTS_FOR_CALL, "{0,choice,0#No type arguments|1#Type argument|1<{0,number,integer} type arguments} expected for {1}", null, FQ_NAMES_IN_TYPES);
         MAP.put(NO_TYPE_ARGUMENTS_ON_RHS, "{0,choice,0#No type arguments|1#Type argument|1<{0,number,integer} type arguments} expected. " +
                                                            "Use ''{1}'' if you don''t want to pass type arguments", null, STRING);
         MAP.put(TYPE_ARGUMENTS_NOT_ALLOWED, "Type arguments are not allowed {0}", STRING);

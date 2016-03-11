@@ -126,7 +126,7 @@ class TracingStrategyForImplicitConstructorDelegationCall(
         unexpectedError("noReceiverAllowed")
     }
 
-    override fun wrongNumberOfTypeArguments(trace: BindingTrace, expectedTypeArgumentCount: Int, descriptor: DeclarationDescriptor) {
+    override fun wrongNumberOfTypeArguments(trace: BindingTrace, expectedTypeArgumentCount: Int, descriptor: CallableDescriptor) {
         unexpectedError("wrongNumberOfTypeArguments")
     }
 

@@ -446,7 +446,7 @@ class TypeResolver(
 
             if (currentArguments.size != currentParameters.size) {
                 c.trace.report(
-                        WRONG_NUMBER_OF_TYPE_ARGUMENTS.on(
+                        WRONG_NUMBER_OF_TYPE_ARGUMENTS_FOR_CLASS.on(
                                 qualifierPart.typeArguments ?: qualifierPart.expression, currentParameters.size, classDescriptorChain[index]
                         )
                 )
@@ -475,7 +475,7 @@ class TypeResolver(
             val typeParametersToSpecify =
                     parameters.subList(result.size, parameters.size).takeWhile { it.original.containingDeclaration is ClassDescriptor }
             if (typeParametersToSpecify.any { parameter -> !parameter.isDeclaredInScope(c) }) {
-                c.trace.report(WRONG_NUMBER_OF_TYPE_ARGUMENTS.on(qualifierParts.last().expression, parameters.size, classDescriptor))
+                c.trace.report(WRONG_NUMBER_OF_TYPE_ARGUMENTS_FOR_CLASS.on(qualifierParts.last().expression, parameters.size, classDescriptor))
                 return null
             }
         }

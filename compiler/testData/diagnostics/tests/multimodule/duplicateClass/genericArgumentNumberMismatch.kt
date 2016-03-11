@@ -6,7 +6,7 @@ package p
 
 public class A<X, Y>
 public class M1 {
-    public val a: A<!WRONG_NUMBER_OF_TYPE_ARGUMENTS!><Int><!> = A<Int, Int>()
+    public val a: A<!WRONG_NUMBER_OF_TYPE_ARGUMENTS_FOR_CLASS!><Int><!> = A<Int, Int>()
 }
 
 // MODULE: m2
@@ -16,7 +16,7 @@ package p
 
 public class A<X, Y>
 
-public fun foo(a: A<!WRONG_NUMBER_OF_TYPE_ARGUMENTS!><Int><!>) {
+public fun foo(a: A<!WRONG_NUMBER_OF_TYPE_ARGUMENTS_FOR_CLASS!><Int><!>) {
 }
 
 // MODULE: m3(m1, m2)

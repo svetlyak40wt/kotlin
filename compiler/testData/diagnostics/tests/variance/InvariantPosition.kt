@@ -37,9 +37,9 @@ interface Test<in I, out O, P> {
     var neOk23: Inv<out <!TYPE_VARIANCE_CONFLICT(I; in; invariant; Inv<out I>)!>I<!>>
 
     var neOk30: Pair<<!TYPE_VARIANCE_CONFLICT(I; in; invariant; Pair<I, [ERROR : No type element]>)!>I<!>, <!SYNTAX!><!>>
-    var neOk31: Pair<<!TYPE_VARIANCE_CONFLICT(I; in; invariant; Pair<I, [ERROR : Inv]>)!>I<!>, <!WRONG_NUMBER_OF_TYPE_ARGUMENTS!>Inv<!>>
-    var neOk32: <!WRONG_NUMBER_OF_TYPE_ARGUMENTS!>Inv<!>
+    var neOk31: Pair<<!TYPE_VARIANCE_CONFLICT(I; in; invariant; Pair<I, [ERROR : Inv]>)!>I<!>, <!WRONG_NUMBER_OF_TYPE_ARGUMENTS_FOR_CLASS!>Inv<!>>
+    var neOk32: <!WRONG_NUMBER_OF_TYPE_ARGUMENTS_FOR_CLASS!>Inv<!>
     var neOk33: Inv<<!SYNTAX!><!>>
     var neOk34: Inv<<!UNRESOLVED_REFERENCE!>C<!>>
-    var neOk35: Inv<!WRONG_NUMBER_OF_TYPE_ARGUMENTS!><P, P><!>
+    var neOk35: Inv<!WRONG_NUMBER_OF_TYPE_ARGUMENTS_FOR_CLASS!><P, P><!>
 }

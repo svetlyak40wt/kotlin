@@ -13,4 +13,4 @@ fun <T : Any> foo() {
     val t2 = <!CLASS_LITERAL_LHS_NOT_A_CLASS!>T?::class<!>
 }
 
-val m = Map<!WRONG_NUMBER_OF_TYPE_ARGUMENTS!><String><!>::class
+val m = Map<!WRONG_NUMBER_OF_TYPE_ARGUMENTS_FOR_CLASS!><String><!>::class

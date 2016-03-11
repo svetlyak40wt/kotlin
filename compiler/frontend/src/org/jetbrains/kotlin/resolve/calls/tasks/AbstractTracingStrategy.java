@@ -104,14 +104,14 @@ public abstract class AbstractTracingStrategy implements TracingStrategy {
 
     @Override
     public void wrongNumberOfTypeArguments(
-            @NotNull BindingTrace trace, int expectedTypeArgumentCount, @NotNull DeclarationDescriptor descriptor
+            @NotNull BindingTrace trace, int expectedTypeArgumentCount, @NotNull CallableDescriptor descriptor
     ) {
         KtTypeArgumentList typeArgumentList = call.getTypeArgumentList();
         if (typeArgumentList != null) {
-            trace.report(WRONG_NUMBER_OF_TYPE_ARGUMENTS.on(typeArgumentList, expectedTypeArgumentCount, descriptor));
+            trace.report(WRONG_NUMBER_OF_TYPE_ARGUMENTS_FOR_CALL.on(typeArgumentList, expectedTypeArgumentCount, descriptor));
         }
         else {
-            trace.report(WRONG_NUMBER_OF_TYPE_ARGUMENTS.on(reference, expectedTypeArgumentCount, descriptor));
+            trace.report(WRONG_NUMBER_OF_TYPE_ARGUMENTS_FOR_CALL.on(reference, expectedTypeArgumentCount, descriptor));
         }
     }
 

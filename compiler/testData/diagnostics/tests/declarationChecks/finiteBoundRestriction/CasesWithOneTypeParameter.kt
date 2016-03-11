@@ -11,7 +11,7 @@ interface B1<<!FINITE_BOUNDS_VIOLATION!>T : B0<*><!>>
 interface AA<<!FINITE_BOUNDS_VIOLATION!>T: AA<*><!>>
 interface BB<S : List<AA<*>>>
 
-interface A<T: List<!WRONG_NUMBER_OF_TYPE_ARGUMENTS!><T, T, T><!>>
+interface A<T: List<!WRONG_NUMBER_OF_TYPE_ARGUMENTS_FOR_CLASS!><T, T, T><!>>
 
 class X<Y>
 class D<T : X<in X<out X<T>>>>

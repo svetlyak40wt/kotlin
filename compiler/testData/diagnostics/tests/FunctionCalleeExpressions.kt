@@ -77,7 +77,7 @@ fun test() {
     <!TYPE_MISMATCH!>"sd"<!>.(fun Int.() = 1)()
     val i : Int? = null
     i<!UNSAFE_CALL!>.<!>(fun Int.() = 1)();
-    {}<!WRONG_NUMBER_OF_TYPE_ARGUMENTS!><Int><!>()
+    {}<!WRONG_NUMBER_OF_TYPE_ARGUMENTS_FOR_CALL!><Int><!>()
     1<!UNNECESSARY_SAFE_CALL!>?.<!>(fun Int.() = 1)()
     1.<!NO_RECEIVER_ALLOWED!>{}<!>()
 }
