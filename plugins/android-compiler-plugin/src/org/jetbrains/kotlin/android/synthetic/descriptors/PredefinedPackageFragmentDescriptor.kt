@@ -47,7 +47,7 @@ class PredefinedPackageFragmentDescriptor(
 
         @Suppress("UNCHECKED_CAST")
         override fun getContributedFunctions(name: Name, location: LookupLocation) =
-                calculatedDescriptors().filter { it is FunctionDescriptor && it.name == name } as List<FunctionDescriptor>
+                calculatedDescriptors().filter { it is SimpleFunctionDescriptor && it.name == name } as List<SimpleFunctionDescriptor>
 
         override fun getContributedDescriptors(kindFilter: DescriptorKindFilter, nameFilter: (Name) -> Boolean) =
                 calculatedDescriptors().filter { nameFilter(it.name) && kindFilter.accepts(it) }

@@ -45,6 +45,7 @@ import org.jetbrains.kotlin.storage.NotNullLazyValue
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.TypeUtils
 import org.jetbrains.kotlin.utils.Printer
+import org.jetbrains.kotlin.utils.SmartSet
 import org.jetbrains.kotlin.utils.addIfNotNull
 import org.jetbrains.kotlin.utils.toReadOnlyList
 import java.util.*
@@ -72,7 +73,7 @@ abstract class LazyJavaScope(protected val c: LazyJavaResolverContext) : MemberS
 
     protected abstract fun getDispatchReceiverParameter(): ReceiverParameterDescriptor?
 
-    private val functions = c.storageManager.createMemoizedFunction<Name, Collection<FunctionDescriptor>> {
+    private val functions = c.storageManager.createMemoizedFunction<Name, Collection<SimpleFunctionDescriptor>> {
         name ->
         val result = LinkedHashSet<SimpleFunctionDescriptor>()
 
@@ -214,7 +215,7 @@ abstract class LazyJavaScope(protected val c: LazyJavaResolverContext) : MemberS
         return ResolvedValueParameters(descriptors, synthesizedNames)
     }
 
-    override fun getContributedFunctions(name: Name, location: LookupLocation): Collection<FunctionDescriptor> {
+    override fun getContributedFunctions(name: Name, location: LookupLocation): Collection<SimpleFunctionDescriptor> {
         recordLookup(name, location)
         return functions(name)
     }
