@@ -70,11 +70,15 @@ class CodeBuilder(private val topElement: PsiElement?, private var docConverter:
             append(docConverter.convertDocComment(element), false)
         }
         else {
-            append(element.text!!, element.isEndOfLineComment())
+            append(element.text!!, element is PsiComment, element.isEndOfLineComment(), element.isCommentAtFirstColumn(), element.isFirstNonWhitespaceElementInLine())
         }
     }
 
-    private fun append(text: String, endOfLineComment: Boolean = false): CodeBuilder {
+    private fun append(text: String,
+                       isComment: Boolean = false,
+                       endOfLineComment: Boolean = false,
+                       isCommentAtFirstColumn: Boolean = false,
+                       isFirstNonWhitespaceElementInLine: Boolean = false): CodeBuilder {
         if (text.isEmpty()) {
             assert(!endOfLineComment)
             return this
@@ -85,6 +89,16 @@ class CodeBuilder(private val topElement: PsiElement?, private var docConverter:
         if (endOfLineCommentAtEnd) {
             if (text[0] != '\n') builder.append('\n')
             endOfLineCommentAtEnd = false
+        }
+
+        if (isComment) {
+            if (isFirstNonWhitespaceElementInLine && !builder.takeLastWhile { it.isWhitespace() }.contains('\n')) {
+                builder.append('\n')
+            }
+
+            if (!isCommentAtFirstColumn && builder.lastOrNull() == '\n') {
+                builder.append(" ")
+            }
         }
 
         builder.append(text)
@@ -341,6 +355,12 @@ class CodeBuilder(private val topElement: PsiElement?, private var docConverter:
         fun PsiElement.isEndOfLineComment() = this is PsiComment && tokenType == JavaTokenType.END_OF_LINE_COMMENT
 
         fun PsiElement.isEmptyElement() = firstChild == null && textLength == 0
+
+        fun PsiElement.isCommentAtFirstColumn() =
+                isCommentOrSpace() && (this.prevSibling?.let { it is PsiWhiteSpace && it.text.endsWith("\\n") } ?: false)
+
+        fun PsiElement.isFirstNonWhitespaceElementInLine() =
+                this is PsiComment && (this.prevSibling?.let { it is PsiWhiteSpace && it.text.contains('\n') } ?: false)
 
         fun PsiWhiteSpace.lineBreakCount() = StringUtil.getLineBreakCount(text)
 
