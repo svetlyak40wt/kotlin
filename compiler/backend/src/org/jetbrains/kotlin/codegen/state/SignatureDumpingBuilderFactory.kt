@@ -109,4 +109,22 @@ class SignatureDumpingBuilderFactory(
 private fun Appendable.appendQuoted(value: String?): Appendable = value?.let { append('"').append(jsonEscape(it)).append('"') } ?: append("null")
 private fun Appendable.appendNameValue(name: String, value: String?): Appendable = appendQuoted(name).append(": ").appendQuoted(value)
 
-private fun jsonEscape(value: String): String = value
+private fun jsonEscape(value: String): String = buildString {
+    for (index in 0..value.length - 1) {
+        val ch = value[index]
+        when (ch) {
+            '\b' -> append("\\b")
+            '\t' -> append("\\t")
+            '\n' -> append("\\n")
+            '\r' -> append("\\r")
+            '\"' -> append("\\\"")
+            '\\' -> append("\\\\")
+            else -> if (ch.toInt() < 32) {
+                append("\\u" + Integer.toHexString(ch.toInt()).padStart(4, '0'))
+            }
+            else {
+                append(ch)
+            }
+        }
+    }
+}
